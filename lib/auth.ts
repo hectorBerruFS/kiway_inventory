@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -45,6 +47,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role: number }).role;
+        if (AUTH_DEBUG) {
+          console.log("[auth][jwt] set_token_from_user", {
+            userId: user.id,
+            role: (user as { role: number }).role,
+          });
+        }
+      } else if (AUTH_DEBUG) {
+        console.log("[auth][jwt] reuse_token", {
+          tokenId: token.id,
+          role: token.role,
+        });
       }
       return token;
     },
@@ -52,8 +65,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as { role: number }).role = token.role as number;
+        if (AUTH_DEBUG) {
+          console.log("[auth][session] map_session", {
+            userId: session.user.id,
+            role: (session.user as { role: number }).role,
+          });
+        }
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      if (AUTH_DEBUG) {
+        console.log("[auth][event] sign_in", {
+          userId: user.id,
+          email: user.email,
+        });
+      }
+    },
+    async signOut({ token, session }) {
+      if (AUTH_DEBUG) {
+        console.log("[auth][event] sign_out", {
+          tokenId: token?.id,
+          sessionUserId: session?.user?.id,
+        });
+      }
     },
   },
   pages: {
@@ -63,4 +100,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   trustHost: true,
+  debug: AUTH_DEBUG,
 });

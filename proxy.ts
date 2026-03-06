@@ -1,6 +1,13 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+function withNoStore(res: NextResponse) {
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.headers.set("Pragma", "no-cache");
+  res.headers.set("Expires", "0");
+  return res;
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
@@ -18,10 +25,10 @@ export default auth((req) => {
   if (!req.auth) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return withNoStore(NextResponse.redirect(loginUrl));
   }
 
-  return NextResponse.next();
+  return withNoStore(NextResponse.next());
 });
 
 export const config = {

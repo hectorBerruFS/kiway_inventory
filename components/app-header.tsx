@@ -4,9 +4,29 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
+import { useState } from "react";
+import { useSWRConfig } from "swr";
 
 export function AppHeader() {
   const { data: session } = useSession();
+  const { mutate } = useSWRConfig();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    try {
+      setLoggingOut(true);
+      await mutate(() => true, undefined, { revalidate: false });
+      const result = await signOut({ redirect: false, callbackUrl: "/login" });
+
+      // Force a full navigation so App Router in-memory cache is fully reset.
+      window.location.replace(result?.url || "/login");
+    } catch (error) {
+      console.error("[auth] logout_failed", error);
+      window.location.replace("/login");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card">
@@ -38,7 +58,8 @@ export function AppHeader() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={handleLogout}
+          disabled={loggingOut}
           aria-label="Cerrar sesion"
         >
           <LogOut className="h-5 w-5" />

@@ -1,11 +1,16 @@
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
+import { requireAuth } from "@/lib/auth-helpers";
 
-export default function DashboardLayout({
+export const dynamic = "force-dynamic";
+
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireAuth();
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
