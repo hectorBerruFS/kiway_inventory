@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
 import { tr } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 export function AppHeader() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   async function handleLogout() {
     await signOut({ callbackUrl: "/login" , redirect: true });
-    document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure";
     document.cookie = "__Host-authjs.csrf-token=; Max-Age=0; path=/; secure";
-
+    router.replace("/login");
+    router.refresh();
 
   }
 
