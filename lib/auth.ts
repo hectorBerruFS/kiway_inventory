@@ -99,6 +99,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  cookies: {
+  sessionToken: {
+    name: "__Secure-authjs.session-token",
+    options: {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: true,
+    },
+  },
+  },
   trustHost: true,
   debug: AUTH_DEBUG,
 });
