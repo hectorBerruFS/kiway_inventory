@@ -5,6 +5,7 @@ const PUBLIC_ROUTES = [
   "/login",
   "/setup",
   "/api/auth",
+  "/api/auth/signout",
   "/api/setup",
 ];
 
