@@ -11,6 +11,9 @@ export function AppHeader() {
 
   async function handleLogout() {
     await signOut({ callbackUrl: "/login" , redirect: true });
+    document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "__Host-authjs.csrf-token=; Max-Age=0; path=/; secure";
+
 
   }
 

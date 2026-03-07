@@ -47,17 +47,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role: number }).role;
-        if (AUTH_DEBUG) {
-          console.log("[auth][jwt] set_token_from_user", {
-            userId: user.id,
-            role: (user as { role: number }).role,
-          });
-        }
-      } else if (AUTH_DEBUG) {
-        console.log("[auth][jwt] reuse_token", {
-          tokenId: token.id,
-          role: token.role,
-        });
       }
       return token;
     },
@@ -65,32 +54,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as { role: number }).role = token.role as number;
-        if (AUTH_DEBUG) {
-          console.log("[auth][session] map_session", {
-            userId: session.user.id,
-            role: (session.user as { role: number }).role,
-          });
-        }
       }
       return session;
-    },
-  },
-  events: {
-    async signIn({ user }) {
-      if (AUTH_DEBUG) {
-        console.log("[auth][event] sign_in", {
-          userId: user.id,
-          email: user.email,
-        });
-      }
-    },
-    async signOut({ token, session }) {
-      if (AUTH_DEBUG) {
-        console.log("[auth][event] sign_out", {
-          tokenId: token?.id,
-          sessionUserId: session?.user?.id,
-        });
-      }
     },
   },
   pages: {
@@ -100,17 +65,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   cookies: {
-  sessionToken: {
-    name: "__Secure-authjs.session-token",
-    options: {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: true,
-      maxAge: undefined, // Dejar que NextAuth maneje el maxAge por defecto
+    /** 🔑 ÚNICA cookie de sesión */
+    sessionToken: {
+      name: "__Secure-authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",       // obligatorio para que funcione en Netlify
+        secure: true,    // HTTPS siempre
+      },
     },
-  },
-   // Agregar explícitamente para que NextAuth sepa qué borrar
+    /** 🔑 CSRF con prefijo __Host- */
+    csrfToken: {
+      name: "__Host-authjs.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",       // obligatorio para __Host-
+        secure: true,
+      },
+    },
+    /** 🔑 Callback URL */
     callbackUrl: {
       name: "__Secure-authjs.callback-url",
       options: {
@@ -121,15 +96,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     },
   },
-  csrfToken: {
-    name: "__Host-authjs.csrf-token",
-    options: {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: true,
-    },
-  },  
   trustHost: true,
   debug: AUTH_DEBUG,
 });
