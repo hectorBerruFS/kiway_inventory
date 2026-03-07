@@ -107,9 +107,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       sameSite: "lax",
       path: "/",
       secure: true,
+      maxAge: undefined, // Dejar que NextAuth maneje el maxAge por defecto
     },
   },
+   // Agregar explícitamente para que NextAuth sepa qué borrar
+    callbackUrl: {
+      name: "__Secure-authjs.callback-url",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
+    },
   },
+  csrfToken: {
+    name: "__Host-authjs.csrf-token",
+    options: {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: true,
+    },
+  },  
   trustHost: true,
   debug: AUTH_DEBUG,
 });

@@ -1,13 +1,18 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { logout } from "@/app/actions/logout";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
+import { tr } from "date-fns/locale";
 
 export function AppHeader() {
   const { data: session } = useSession();
+
+  async function handleLogout() {
+    await signOut({ callbackUrl: "/login" , redirect: true });
+
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card">
@@ -78,16 +83,16 @@ export function AppHeader() {
           </div>
         </div>
 
-        <form action={logout}>
           <Button
-            type="submit"
+            onClick={handleLogout} 
             variant="ghost"
             size="icon"
             aria-label="Cerrar sesion"
+             
           >
             <LogOut className="h-5 w-5" />
           </Button>
-        </form>
+      
       </div>
     </header>
   );
