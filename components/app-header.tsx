@@ -12,7 +12,7 @@ export function AppHeader() {
   const router = useRouter();
 
   async function handleLogout() {
-    await signOut({ callbackUrl: "/login" , redirect: true });
+    await signOut({ callbackUrl: "/login" , redirect: false });
     document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure";
     document.cookie = "__Host-authjs.csrf-token=; Max-Age=0; path=/; secure";
     router.replace("/login");
