@@ -58,6 +58,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    async signIn({ user }) {
+      if (AUTH_DEBUG) {
+        console.log("[auth][event] sign_in", { userId: user.id, email: user.email });
+      }
+    },
+    async signOut({ token, session }) {
+      if (AUTH_DEBUG) {
+        console.log("[auth][event] sign_out", {
+          tokenId: token?.id,
+          sessionUserId: session?.user?.id,
+        });
+      }
+    },
+  },
   pages: {
     signIn: "/login",
   },

@@ -1,11 +1,12 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
 import { useState } from "react";
 import { useSWRConfig } from "swr";
+import { logout } from "@/app/actions/logout";
 
 export function AppHeader() {
   const { data: session } = useSession();
@@ -16,8 +17,8 @@ export function AppHeader() {
     try {
       setLoggingOut(true);
       await mutate(() => true, undefined, { revalidate: false });
-      const result = await signOut({ callbackUrl: "/login", redirect: false });
-      window.location.replace(result?.url || "/login");
+      await logout();
+      window.location.replace("/login");
     } catch (error) {
       console.error("[auth] logout_failed", error);
       window.location.replace("/login");
