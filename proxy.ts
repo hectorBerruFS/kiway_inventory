@@ -29,11 +29,16 @@ function withNoStore(res: NextResponse) {
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
+  const authCookies = req.cookies
+    .getAll()
+    .map((c) => c.name)
+    .filter((name) => name.includes("authjs") || name.includes("next-auth"));
 
   if (AUTH_DEBUG) {
     console.log("[middleware]", {
       pathname,
       isAuthenticated,
+      authCookies,
     });
   }
 
