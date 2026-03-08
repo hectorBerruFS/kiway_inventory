@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
@@ -15,8 +15,15 @@ export function AppHeader() {
   async function handleLogout() {
     try {
       setLoggingOut(true);
+      if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "true") {
+        console.log("[auth][client] logout_click");
+      }
       await mutate(() => true, undefined, { revalidate: false });
-      window.location.replace("/api/force-logout");
+      const result = await signOut({
+        redirect: false,
+        callbackUrl: "/login",
+      });
+      window.location.replace(result?.url || "/login");
     } catch (error) {
       console.error("[auth] logout_failed", error);
       window.location.replace("/login");

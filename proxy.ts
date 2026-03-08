@@ -7,7 +7,6 @@ const PUBLIC_ROUTES = [
   "/login",
   "/setup",
   "/api/auth",
-  "/api/force-logout",
   "/api/setup",
 ];
 
@@ -44,12 +43,7 @@ export default auth((req) => {
 
   // Public routes
   if (isPublicRoute(pathname)) {
-    // If already logged in, keep login page blocked except explicit logout callback.
-    if (
-      isAuthenticated &&
-      pathname.startsWith("/login") &&
-      req.nextUrl.searchParams.get("loggedOut") !== "1"
-    ) {
+    if (isAuthenticated && pathname.startsWith("/login")) {
       return withNoStore(NextResponse.redirect(new URL("/dashboard", req.url)));
     }
 
