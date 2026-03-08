@@ -1,47 +1,19 @@
 import { NextResponse } from "next/server";
 
-const AUTH_COOKIE_NAMES = [
-  "__Secure-authjs.session-token",
-  "authjs.session-token",
-  "__Secure-next-auth.session-token",
-  "next-auth.session-token",
-  "__Host-authjs.csrf-token",
-  "authjs.csrf-token",
-  "__Host-next-auth.csrf-token",
-  "next-auth.csrf-token",
-  "__Secure-authjs.callback-url",
-  "authjs.callback-url",
-  "__Secure-next-auth.callback-url",
-  "next-auth.callback-url",
-];
-
-function deleteCookieVariants(res: NextResponse, name: string, hostname: string) {
-  const base = {
-    maxAge: 0,
-    expires: new Date(0),
-    sameSite: "lax" as const,
-    secure: true,
-  };
-
-  const paths = ["/", "/api/auth"];
-
-  for (const path of paths) {
-    res.cookies.set(name, "", { ...base, path, httpOnly: true });
-    res.cookies.set(name, "", { ...base, path, httpOnly: false });
-    res.cookies.set(name, "", { ...base, path, httpOnly: true, domain: hostname });
-    res.cookies.set(name, "", { ...base, path, httpOnly: false, domain: hostname });
-  }
-}
-
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const hostname = url.hostname;
   const redirectTo = new URL("/login?loggedOut=1", req.url);
   const res = NextResponse.redirect(redirectTo);
 
-  for (const cookieName of AUTH_COOKIE_NAMES) {
-    deleteCookieVariants(res, cookieName, hostname);
-  }
+  // Keep this minimal: only delete the real cookies seen in production logs.
+  // Too many Set-Cookie variants can be ignored/truncated by some edge layers.
+  res.cookies.delete("__Secure-authjs.session-token");
+  res.cookies.delete("__Host-authjs.csrf-token");
+  res.cookies.delete("__Secure-authjs.callback-url");
+
+  // Defensive fallback for old non-secure names.
+  res.cookies.delete("authjs.session-token");
+  res.cookies.delete("authjs.csrf-token");
+  res.cookies.delete("authjs.callback-url");
 
   res.headers.set(
     "Cache-Control",
@@ -51,7 +23,16 @@ export async function GET(req: Request) {
   res.headers.set("Expires", "0");
 
   if (process.env.AUTH_DEBUG === "true") {
-    console.log("[auth][force_logout_route]", { hostname, cookiesCleared: AUTH_COOKIE_NAMES.length });
+    console.log("[auth][force_logout_route]", {
+      deleted: [
+        "__Secure-authjs.session-token",
+        "__Host-authjs.csrf-token",
+        "__Secure-authjs.callback-url",
+        "authjs.session-token",
+        "authjs.csrf-token",
+        "authjs.callback-url",
+      ],
+    });
   }
 
   return res;
