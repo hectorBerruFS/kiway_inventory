@@ -26,6 +26,43 @@ function withNoStore(res: NextResponse) {
   return res;
 }
 
+function clearAuthCookies(res: NextResponse) {
+  const names = [
+    "__Secure-authjs.session-token",
+    "authjs.session-token",
+    "__Secure-next-auth.session-token",
+    "next-auth.session-token",
+    "__Host-authjs.csrf-token",
+    "authjs.csrf-token",
+    "__Host-next-auth.csrf-token",
+    "next-auth.csrf-token",
+    "__Secure-authjs.callback-url",
+    "authjs.callback-url",
+    "__Secure-next-auth.callback-url",
+    "next-auth.callback-url",
+  ];
+
+  for (const name of names) {
+    res.cookies.set(name, "", {
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+    });
+
+    res.cookies.set(name, "", {
+      path: "/api/auth",
+      maxAge: 0,
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+    });
+  }
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
@@ -42,34 +79,45 @@ export default auth((req) => {
     });
   }
 
-  // 1️⃣ Permitir rutas públicas
-  if (isPublicRoute(pathname)) {
+  // Force logout at edge to guarantee cookie invalidation before redirect.
+  if (pathname === "/api/auth/force-logout") {
+    const loginUrl = new URL("/login?loggedOut=1", req.url);
+    const res = NextResponse.redirect(loginUrl);
+    clearAuthCookies(res);
 
-    // Si el usuario ya está logueado y entra a login
-    if (isAuthenticated && pathname.startsWith("/login")) {
-      return withNoStore(
-        NextResponse.redirect(new URL("/dashboard", req.url))
-      );
+    if (AUTH_DEBUG) {
+      console.log("[middleware][force_logout]", { cleared: true });
+    }
+
+    return withNoStore(res);
+  }
+
+  // Public routes
+  if (isPublicRoute(pathname)) {
+    // If already logged in, keep login page blocked except explicit logout callback.
+    if (
+      isAuthenticated &&
+      pathname.startsWith("/login") &&
+      req.nextUrl.searchParams.get("loggedOut") !== "1"
+    ) {
+      return withNoStore(NextResponse.redirect(new URL("/dashboard", req.url)));
     }
 
     return NextResponse.next();
   }
 
-  // 2️⃣ Usuario NO autenticado → redirect a login
+  // Redirect unauthenticated users to login
   if (!isAuthenticated) {
     const loginUrl = new URL("/login", req.url);
-
     loginUrl.searchParams.set(
       "callbackUrl",
       req.nextUrl.pathname + req.nextUrl.search
     );
 
-    return withNoStore(
-      NextResponse.redirect(loginUrl)
-    );
+    return withNoStore(NextResponse.redirect(loginUrl));
   }
 
-  // 3️⃣ Usuario autenticado → continuar
+  // Authenticated user continues
   return withNoStore(NextResponse.next());
 });
 
