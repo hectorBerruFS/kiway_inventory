@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
+
 const PUBLIC_ROUTES = [
   "/login",
   "/setup",
@@ -27,6 +29,13 @@ function withNoStore(res: NextResponse) {
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
+
+  if (AUTH_DEBUG) {
+    console.log("[middleware]", {
+      pathname,
+      isAuthenticated,
+    });
+  }
 
   // 1️⃣ Permitir rutas públicas
   if (isPublicRoute(pathname)) {

@@ -4,20 +4,26 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/db/schema";
-import { tr } from "date-fns/locale";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useSWRConfig } from "swr";
 
 export function AppHeader() {
   const { data: session } = useSession();
-  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
-    await signOut({ callbackUrl: "/login" , redirect: false });
-    document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure";
-    document.cookie = "__Host-authjs.csrf-token=; Max-Age=0; path=/; secure";
-    router.replace("/login");
-    router.refresh();
-
+    try {
+      setLoggingOut(true);
+      await mutate(() => true, undefined, { revalidate: false });
+      const result = await signOut({ callbackUrl: "/login", redirect: false });
+      window.location.replace(result?.url || "/login");
+    } catch (error) {
+      console.error("[auth] logout_failed", error);
+      window.location.replace("/login");
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   return (
@@ -94,6 +100,7 @@ export function AppHeader() {
             variant="ghost"
             size="icon"
             aria-label="Cerrar sesion"
+            disabled={loggingOut}
              
           >
             <LogOut className="h-5 w-5" />

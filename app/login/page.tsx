@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { mutate } = useSWRConfig();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -35,8 +33,7 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       await mutate(() => true, undefined, { revalidate: false });
-      router.replace("/dashboard");
-      router.refresh();
+      window.location.replace("/dashboard");
     }
   }
 

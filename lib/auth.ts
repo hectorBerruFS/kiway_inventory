@@ -64,38 +64,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
-  cookies: {
-    /** 🔑 ÚNICA cookie de sesión */
-    sessionToken: {
-      name: "__Secure-authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",       // obligatorio para que funcione en Netlify
-        secure: true,    // HTTPS siempre
-      },
-    },
-    /** 🔑 CSRF con prefijo __Host- */
-    csrfToken: {
-      name: "__Host-authjs.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",       // obligatorio para __Host-
-        secure: true,
-      },
-    },
-    /** 🔑 Callback URL */
-    callbackUrl: {
-      name: "__Secure-authjs.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
-  },
   trustHost: true,
   debug: AUTH_DEBUG,
 });
