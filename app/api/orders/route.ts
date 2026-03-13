@@ -9,11 +9,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") as "draft" | "sent" | "approved" | "rejected" | "cancelled" | null;
   const companyId = searchParams.get("companyId");
+  const month = searchParams.get("month");
 
   try {
     const result = await listOrders(session.user.id, session.user.role, {
       status: status || undefined,
       companyId: companyId || undefined,
+      month: month || undefined,
     });
 
     return NextResponse.json(result);

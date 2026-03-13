@@ -30,11 +30,14 @@ interface ExtraAuth {
 }
 
 export function AdminDashboard() {
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
   const { data: pendingOrders, isLoading: ordersLoading } = useSWR<Order[]>(
-    "/api/orders?status=sent",
+    `/api/orders?status=sent&month=${currentMonth}`,
     fetcher
   );
-  const { data: allOrders } = useSWR<Order[]>("/api/orders", fetcher);
+  const { data: monthOrders } = useSWR<Order[]>(`/api/orders?month=${currentMonth}`, fetcher);
 
   const { data: extraAuths, mutate: mutateAuths, isLoading: authsLoading } = useSWR<ExtraAuth[]>(
     "/api/extra-authorizations",
@@ -57,8 +60,8 @@ export function AdminDashboard() {
 
   const stats = {
     pending: pendingOrders?.length || 0,
-    approved: allOrders?.filter((o) => o.status === "approved").length || 0,
-    rejected: allOrders?.filter((o) => o.status === "rejected").length || 0,
+    approved: monthOrders?.filter((o) => o.status === "approved").length || 0,
+    rejected: monthOrders?.filter((o) => o.status === "rejected").length || 0,
   };
 
   return (
@@ -66,28 +69,40 @@ export function AdminDashboard() {
       <h1 className="text-xl font-bold text-foreground">Panel de Administracion</h1>
 
       <div className="grid grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="flex flex-col items-center p-3">
-            <Clock className="h-5 w-5 text-chart-3 mb-1" />
-            <span className="text-2xl font-bold text-foreground">{stats.pending}</span>
-            <span className="text-xs text-muted-foreground">Pendientes</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col items-center p-3">
-            <CheckCircle2 className="h-5 w-5 text-green-500 mb-1" />
-            <span className="text-2xl font-bold text-foreground">{stats.approved}</span>
-            <span className="text-xs text-muted-foreground">Aprobados</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col items-center p-3">
-            <XCircle className="h-5 w-5 text-destructive mb-1" />
-            <span className="text-2xl font-bold text-foreground">{stats.rejected}</span>
-            <span className="text-xs text-muted-foreground">Rechazados</span>
-          </CardContent>
-        </Card>
-      </div>
+  {/* Pendientes */}
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "sent", month: currentMonth } }}>
+    <Card className="cursor-pointer hover:shadow-md transition">
+      <CardContent className="flex flex-col items-center p-3">
+        <Clock className="h-5 w-5 text-chart-3 mb-1" />
+        <span className="text-2xl font-bold text-foreground">{stats.pending}</span>
+        <span className="text-xs text-muted-foreground">Pendientes</span>
+      </CardContent>
+    </Card>
+  </Link>
+
+  {/* Aprobados */}
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "approved", month: currentMonth } }}>
+    <Card className="cursor-pointer hover:shadow-md transition">
+      <CardContent className="flex flex-col items-center p-3">
+        <CheckCircle2 className="h-5 w-5 text-green-500 mb-1" />
+        <span className="text-2xl font-bold text-foreground">{stats.approved}</span>
+        <span className="text-xs text-muted-foreground">Aprobados</span>
+      </CardContent>
+    </Card>
+  </Link>
+
+  {/* Rechazados */}
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "rejected", month: currentMonth } }}>
+    <Card className="cursor-pointer hover:shadow-md transition">
+      <CardContent className="flex flex-col items-center p-3">
+        <XCircle className="h-5 w-5 text-destructive mb-1" />
+        <span className="text-2xl font-bold text-foreground">{stats.rejected}</span>
+        <span className="text-xs text-muted-foreground">Rechazados</span>
+      </CardContent>
+    </Card>
+  </Link>
+</div>
+
 
       <div className="grid grid-cols-3 gap-3">
         <Link href="/dashboard/orders">
@@ -114,6 +129,50 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
+      </div>
+
+          {/* Pedidos Pendientes de Aprobacion Section */}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-bold text-foreground">Pedidos Pendientes de Aprobacion</h2>
+
+        {ordersLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : !pendingOrders || pendingOrders.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+              <CheckCircle2 className="h-10 w-10 text-green-500 mb-2" />
+              <p className="text-sm text-muted-foreground">No hay pedidos pendientes</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {pendingOrders.map((order) => (
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+                <Card className="hover:bg-accent/50 transition-colors">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-semibold text-foreground">{order.companyName}</p>
+                      <StatusBadge status={order.status} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        Por: {order.supervisorName} -{" "}
+                        {new Date(order.createdAt).toLocaleDateString("es-AR")}
+                      </p>
+                      <span className="text-sm font-bold text-foreground">
+                        {formatCurrency(Number(order.total))}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Autorizaciones Extra Section */}
@@ -178,48 +237,7 @@ export function AdminDashboard() {
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold text-foreground">Pedidos Pendientes de Aprobacion</h2>
 
-        {ordersLoading ? (
-          <div className="flex flex-col gap-2">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : !pendingOrders || pendingOrders.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-              <CheckCircle2 className="h-10 w-10 text-green-500 mb-2" />
-              <p className="text-sm text-muted-foreground">No hay pedidos pendientes</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {pendingOrders.map((order) => (
-              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
-                <Card className="hover:bg-accent/50 transition-colors">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-semibold text-foreground">{order.companyName}</p>
-                      <StatusBadge status={order.status} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        Por: {order.supervisorName} -{" "}
-                        {new Date(order.createdAt).toLocaleDateString("es-AR")}
-                      </p>
-                      <span className="text-sm font-bold text-foreground">
-                        {formatCurrency(Number(order.total))}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

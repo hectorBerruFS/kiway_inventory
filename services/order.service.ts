@@ -36,6 +36,7 @@ export interface UpdateOrderInput {
 export interface OrderListFilters {
   status?: "draft" | "sent" | "approved" | "rejected" | "cancelled";
   companyId?: string;
+  month?: string; // YYYY-MM
 }
 
 // Helper: Calculate order total from items
@@ -516,6 +517,11 @@ export async function listOrders(
   // Apply company filter if provided
   if (filters?.companyId) {
     conditions.push(eq(orders.companyId, filters.companyId));
+  }
+
+  // Apply month filter if provided
+  if (filters?.month) {
+    conditions.push(eq(orders.intendedMonth, filters.month));
   }
 
   const result = await db

@@ -2,13 +2,15 @@
 
 import useSWR from "swr";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart, Calendar } from "lucide-react";
 import { StatusBadge } from "@/components/dashboard/supervisor-dashboard";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { Input } from "@/components/ui/input";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -21,8 +23,24 @@ const STATUS_FILTERS = [
 ];
 
 export default function OrdersPage() {
-  const [statusFilter, setStatusFilter] = useState("");
-  const url = statusFilter ? `/api/orders?status=${statusFilter}` : "/api/orders";
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") || "";
+  const initialMonth = searchParams.get("month") || "";
+
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [monthFilter, setMonthFilter] = useState(initialMonth);
+
+  // si cambia el query param (ej: navegás entre filtros con links), actualiza el estado
+  useEffect(() => {
+    setStatusFilter(initialStatus);
+    setMonthFilter(initialMonth);
+  }, [initialStatus, initialMonth]);
+
+  const queryParams = new URLSearchParams();
+  if (statusFilter) queryParams.set("status", statusFilter);
+  if (monthFilter) queryParams.set("month", monthFilter);
+
+  const url = queryParams.toString() ? `/api/orders?${queryParams.toString()}` : "/api/orders";
   const { data: orders, isLoading } = useSWR(url, fetcher);
 
   return (
@@ -37,18 +55,40 @@ export default function OrdersPage() {
         </Link>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        {STATUS_FILTERS.map((f) => (
-          <Button
-            key={f.value}
-            variant={statusFilter === f.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter(f.value)}
-            className="shrink-0 text-xs h-8"
-          >
-            {f.label}
-          </Button>
-        ))}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+          {STATUS_FILTERS.map((f) => (
+            <Button
+              key={f.value}
+              variant={statusFilter === f.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter(f.value)}
+              className="shrink-0 text-xs h-8"
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Input
+            type="month"
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="h-9 text-xs w-[180px]"
+          />
+          {monthFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMonthFilter("")}
+              className="text-[10px] h-7 px-2"
+            >
+              Limpiar mes
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -69,7 +109,7 @@ export default function OrdersPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-2">
-          {orders.map((order: { id: string; companyName: string; supervisorName: string; status: string; total: string; createdAt: string }) => (
+          {orders.map((order) => (
             <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
               <Card className="hover:bg-accent/50 transition-colors">
                 <CardContent className="p-3">
