@@ -143,7 +143,7 @@ export async function validateBudgetForOrder(
   if (orderTotal > availableNum) {
     return {
       isValid: false,
-      message: `Presupuesto insuficiente. Disponible: ${available}`,
+      message: `Pedido enviado - Presupuesto excedido en $ ${orderTotal - availableNum}`,
       available,
     };
   }
