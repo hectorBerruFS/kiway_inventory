@@ -533,6 +533,7 @@ export async function listOrders(
       supervisorName: users.name,
       status: orders.status,
       total: orders.total,
+      intendedMonth: orders.intendedMonth,
       createdAt: orders.createdAt,
     })
     .from(orders)
