@@ -3,6 +3,7 @@
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -118,54 +119,80 @@ export default function ReceiptsPage() {
             </div>
 
             {orders.map((order: any) => (
-              <Card key={order.id} className="hover:bg-accent/30 transition-colors overflow-hidden border-l-4 border-l-primary/20">
-                <CardContent className="p-0">
-                  <div className="md:grid md:grid-cols-7 gap-4 items-center p-3">
-                    {/* Fecha - Mobile: Top Left */}
-                    <div className="col-span-1 flex flex-col md:block">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold">Fecha</span>
-                      <span className="text-xs font-medium">{formatDate(order.createdAt)}</span>
-                    </div>
-
-                    {/* Empresa - Mobile: Main Title */}
-                    <div className="col-span-2 mt-2 md:mt-0">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold">Empresa</span>
-                      <p className="text-sm font-bold text-foreground">{order.companyName}</p>
-                      <p className="text-[10px] text-muted-foreground md:hidden">{order.supervisorName}</p>
-                    </div>
-
-                    {/* Estado - Mobile: Top Right */}
-                    <div className="col-span-1 mt-2 md:mt-0">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block mb-1">Estado</span>
-                      <StatusBadge status={order.status} />
-                    </div>
-
-                    {/* Total - Mobile: Bottom Right */}
-                    <div className="col-span-1 mt-2 md:mt-0 text-left md:text-right">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block">Total</span>
-                      <span className="text-sm font-bold text-foreground">
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+                <Card className="hover:bg-accent/30 transition-colors overflow-hidden border-l-4 border-l-primary/20">
+                  <CardContent className="p-0">
+                    {/* Desktop Layout (oculto en móvil) */}
+                    <div className="hidden md:grid md:grid-cols-7 gap-4 items-center p-3">
+                      <div className="col-span-1 text-xs font-medium">{formatDate(order.createdAt)}</div>
+                      <div className="col-span-2">
+                        <p className="text-sm font-bold text-foreground truncate">{order.companyName}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{order.supervisorName}</p>
+                      </div>
+                      <div className="col-span-1">
+                        <StatusBadge status={order.status} />
+                      </div>
+                      <div className="col-span-1 text-right text-sm font-bold text-foreground">
                         {formatCurrency(Number(order.total))}
-                      </span>
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className="text-xs px-2 py-1 bg-muted rounded-md border border-border font-mono">
+                          {order.remitoNumber ? String(order.remitoNumber).padStart(6, "0") : "Pendiente"}
+                        </span>
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className="text-xs px-2 py-1 bg-muted rounded-md border border-border">
+                          {order.intendedMonth || "N/A"}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Remito */}
-                    <div className="col-span-1 mt-2 md:mt-0 text-left md:text-center">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block">Remito</span>
-                      <span className="text-xs px-2 py-1 bg-muted rounded-md border border-border font-mono">
-                        {order.remitoNumber ? String(order.remitoNumber).padStart(6, "0") : "Pendiente"}
-                      </span>
-                    </div>
+                    {/* Mobile Layout (oculto en desktop) */}
+                    <div className="flex flex-col gap-3 p-3 md:hidden">
+                      {/* Header: Empresa y Estado */}
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground leading-tight truncate">{order.companyName}</p>
+                          <p className="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">{order.supervisorName}</p>
+                        </div>
+                        <div className="shrink-0">
+                          <StatusBadge status={order.status} />
+                        </div>
+                      </div>
+                      
+                      {/* Medios: Fecha y Remito (en dos columnas para ahorrar espacio) */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase text-muted-foreground font-bold mb-0.5">Fecha</span>
+                          <span className="font-medium">{formatDate(order.createdAt)}</span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-[10px] uppercase text-muted-foreground font-bold mb-0.5">Remito</span>
+                          <span className="font-mono text-muted-foreground">
+                            {order.remitoNumber ? String(order.remitoNumber).padStart(6, "0") : "Pendiente"}
+                          </span>
+                        </div>
+                      </div>
 
-                    {/* Mes Aplicado - Mobile: Bottom Left */}
-                    <div className="col-span-1 mt-2 md:mt-0 text-left md:text-center">
-                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block">Mes Aplicado</span>
-                      <span className="text-xs px-2 py-1 bg-muted rounded-md border border-border">
-                        {order.intendedMonth || "N/A"}
-                      </span>
+                      {/* Footer: Mes y Total */}
+                      <div className="flex justify-between items-end mt-1 pt-2 border-t border-border/50">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase text-muted-foreground font-bold mb-1">Mes Aplicado</span>
+                          <span className="text-[11px] px-2 py-0.5 bg-muted rounded border border-border w-fit text-muted-foreground">
+                            {order.intendedMonth || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-[10px] uppercase text-muted-foreground font-bold mb-0.5">Total</span>
+                          <span className="text-base font-bold text-foreground leading-none">
+                            {formatCurrency(Number(order.total))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
