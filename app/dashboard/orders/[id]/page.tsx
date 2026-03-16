@@ -12,7 +12,7 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useSession } from "next-auth/react";
 import { ROLES } from "@/lib/db/schema";
 import { toast } from "sonner";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { RemitoView } from "@/components/remito-view";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -44,8 +44,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const { data: session } = useSession();
   const { data: order, isLoading } = useSWR<OrderDetail>(`/api/orders/${id}`, fetcher);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [showRemito, setShowRemito] = useState(false);
-  const remitoRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = (session?.user?.role ?? 0) >= ROLES.ADMIN;
   const isOwner = session?.user?.id === order?.supervisorId;
@@ -82,13 +80,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     } finally {
       setActionLoading(null);
     }
-  }
-
-  function handlePrint() {
-    setShowRemito(true);
-    setTimeout(() => {
-      window.print();
-    }, 300);
   }
 
   if (isLoading) {
@@ -246,24 +237,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           )}
 
           {order.status === "approved" && (
-            <Button
-              variant="outline"
-              className="h-12 gap-2"
-              onClick={handlePrint}
-            >
-              <Printer className="h-5 w-5" />
-              Imprimir Remito
+            <Button variant="outline" className="h-12 gap-2" asChild>
+              <a href={`/api/orders/${id}/receipt-pdf`} target="_blank" rel="noopener noreferrer">
+                <Printer className="h-5 w-5" />
+                Imprimir Remito (PDF A4)
+              </a>
             </Button>
           )}
         </div>
       </div>
-
-      {/* Printable Remito */}
-      {showRemito && (
-        <div className="hidden print:block">
-          <RemitoView order={order} ref={remitoRef} />
-        </div>
-      )}
 
       {/* Always have print-ready remito for approved orders */}
       {order.status === "approved" && (

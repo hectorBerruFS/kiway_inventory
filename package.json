@@ -62,7 +62,8 @@
     "swr": "^2.2.5",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "@react-pdf/renderer": "^4.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
