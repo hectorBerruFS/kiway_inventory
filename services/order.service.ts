@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { orders, orderItems, products, companies, users } from "@/lib/db/schema";
+import { orders, orderItems, products, companies, users, remitos } from "@/lib/db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { getAvailableBudget, checkMonthlyOrderLimit } from "./budget.service";
 import { getProductsByIds } from "./product.service";
@@ -283,6 +283,11 @@ export async function approveOrder(
     .where(eq(orders.id, orderId))
     .returning();
 
+  await db
+    .insert(remitos)
+    .values({ orderId })
+    .onConflictDoNothing({ target: remitos.orderId });
+
   return updated;
 }
 
@@ -441,6 +446,7 @@ export interface OrderWithItems {
   total: string;
   createdAt: Date;
   intendedMonth?: string | null;
+  remitoNumber?: number | null;
   items: any[];
 }
 
@@ -467,10 +473,12 @@ export async function getOrderWithItems(
       status: orders.status,
       total: orders.total,
       createdAt: orders.createdAt,
+      remitoNumber: remitos.internalNumber,
     })
     .from(orders)
     .leftJoin(companies, eq(orders.companyId, companies.id))
     .leftJoin(users, eq(orders.supervisorId, users.id))
+    .leftJoin(remitos, eq(remitos.orderId, orders.id))
     .where(eq(orders.id, orderId));
 
   if (!order) {
@@ -534,11 +542,13 @@ export async function listOrders(
       status: orders.status,
       total: orders.total,
       intendedMonth: orders.intendedMonth,
+      remitoNumber: remitos.internalNumber,
       createdAt: orders.createdAt,
     })
     .from(orders)
     .leftJoin(companies, eq(orders.companyId, companies.id))
     .leftJoin(users, eq(orders.supervisorId, users.id))
+    .leftJoin(remitos, eq(remitos.orderId, orders.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(orders.createdAt));
 

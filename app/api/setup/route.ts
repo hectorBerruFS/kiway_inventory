@@ -62,6 +62,7 @@ export async function POST() {
         supervisor_id UUID NOT NULL REFERENCES users(id),
         status order_status NOT NULL DEFAULT 'draft',
         total NUMERIC(10, 2) NOT NULL DEFAULT 0,
+        intended_month VARCHAR(7),
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `;
@@ -76,6 +77,19 @@ export async function POST() {
         price_snapshot NUMERIC(10, 2) NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1
       )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS remitos (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        order_id UUID UNIQUE NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
+        internal_number INTEGER GENERATED ALWAYS AS IDENTITY,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_remitos_number ON remitos(internal_number)
     `;
 
     // Seed data

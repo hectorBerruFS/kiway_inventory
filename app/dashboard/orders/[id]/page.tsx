@@ -35,6 +35,7 @@ interface OrderDetail {
   status: string;
   total: string;
   createdAt: string;
+  remitoNumber?: number | null;
   items: OrderItem[];
 }
 

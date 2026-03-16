@@ -16,12 +16,13 @@ interface Order {
   status: string;
   total: string;
   createdAt: string;
+  remitoNumber?: number | null;
   items: OrderItem[];
 }
 
 export const RemitoView = forwardRef<HTMLDivElement, { order: Order }>(
   function RemitoView({ order }, ref) {
-    const remitoNumber = order.id.slice(0, 8).toUpperCase();
+    const remitoNumber = order.remitoNumber ? String(order.remitoNumber).padStart(6, "0") : order.id.slice(0, 8).toUpperCase();
 
     return (
       <div

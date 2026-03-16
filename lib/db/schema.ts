@@ -82,6 +82,16 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull().default(1),
 });
 
+export const remitos = pgTable("remitos", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id")
+    .references(() => orders.id, { onDelete: "restrict" })
+    .notNull()
+    .unique(),
+  internalNumber: integer("internal_number").generatedAlwaysAsIdentity(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const extraOrderAuthorizations = pgTable("extra_order_authorizations", {
   id: uuid("id").defaultRandom().primaryKey(),
   companyId: uuid("company_id")
@@ -104,6 +114,7 @@ export type Product = typeof products.$inferSelect;
 export type Company = typeof companies.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type Remito = typeof remitos.$inferSelect;
 export type ExtraOrderAuthorization = typeof extraOrderAuthorizations.$inferSelect;
 
 // Role constants

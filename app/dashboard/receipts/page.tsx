@@ -108,18 +108,19 @@ export default function ReceiptsPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {/* Cabecera de "tabla" para desktop (opcional, manteniendo mobile first) */}
-            <div className="hidden md:grid md:grid-cols-6 gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="hidden md:grid md:grid-cols-7 gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <div className="col-span-1">Fecha</div>
               <div className="col-span-2">Empresa</div>
               <div className="col-span-1">Estado</div>
               <div className="col-span-1 text-right">Total</div>
+              <div className="col-span-1 text-center">Remito</div>
               <div className="col-span-1 text-center">Mes Aplicado</div>
             </div>
 
             {orders.map((order: any) => (
               <Card key={order.id} className="hover:bg-accent/30 transition-colors overflow-hidden border-l-4 border-l-primary/20">
                 <CardContent className="p-0">
-                  <div className="md:grid md:grid-cols-6 gap-4 items-center p-3">
+                  <div className="md:grid md:grid-cols-7 gap-4 items-center p-3">
                     {/* Fecha - Mobile: Top Left */}
                     <div className="col-span-1 flex flex-col md:block">
                       <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold">Fecha</span>
@@ -144,6 +145,14 @@ export default function ReceiptsPage() {
                       <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block">Total</span>
                       <span className="text-sm font-bold text-foreground">
                         {formatCurrency(Number(order.total))}
+                      </span>
+                    </div>
+
+                    {/* Remito */}
+                    <div className="col-span-1 mt-2 md:mt-0 text-left md:text-center">
+                      <span className="md:hidden text-[10px] uppercase text-muted-foreground font-bold block">Remito</span>
+                      <span className="text-xs px-2 py-1 bg-muted rounded-md border border-border font-mono">
+                        {order.remitoNumber ? String(order.remitoNumber).padStart(6, "0") : "Pendiente"}
                       </span>
                     </div>
 
