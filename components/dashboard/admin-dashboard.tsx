@@ -2,10 +2,10 @@
 
 import useSWR from "swr";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart, Package, Building2, Clock, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react";
+import { ShoppingCart, Building2, Clock, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react";
 import { StatusBadge } from "./supervisor-dashboard";
 import { formatCurrency } from "@/lib/format";
 
@@ -18,6 +18,14 @@ interface Order {
   status: string;
   total: string;
   createdAt: string;
+  budgetAssessment?: {
+    withinBudget: boolean;
+    exceededBy: string;
+    availableBeforeApproval: string;
+    approvedConsumed: string;
+    monthlyBudget: string;
+    month: string;
+  };
 }
 
 interface ExtraAuth {
@@ -167,6 +175,26 @@ export function AdminDashboard() {
                         {formatCurrency(Number(order.total))}
                       </span>
                     </div>
+                    {order.budgetAssessment && (
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <p
+                          className={`text-xs font-medium ${
+                            order.budgetAssessment.withinBudget
+                              ? "text-green-600"
+                              : "text-amber-700"
+                          }`}
+                        >
+                          {order.budgetAssessment.withinBudget
+                            ? "En presupuesto"
+                            : `Excede presupuesto por ${formatCurrency(
+                                Number(order.budgetAssessment.exceededBy)
+                              )}`}
+                        </p>
+                        <span className="text-[11px] text-muted-foreground">
+                          Mes: {order.budgetAssessment.month}
+                        </span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </Link>

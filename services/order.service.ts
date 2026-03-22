@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { orders, orderItems, products, companies, users, remitos } from "@/lib/db/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
-import { getAvailableBudget, checkMonthlyOrderLimit } from "./budget.service";
+import { eq, and, sql, desc, isNull, gte, lt, or } from "drizzle-orm";
+import { checkMonthlyOrderLimit } from "./budget.service";
 import { getProductsByIds } from "./product.service";
 import { validateAuthorization, consumeAuthorization } from "./authorization.service";
 
@@ -37,6 +37,145 @@ export interface OrderListFilters {
   status?: "draft" | "sent" | "approved" | "rejected" | "cancelled";
   companyId?: string;
   month?: string; // YYYY-MM
+}
+
+export interface OrderBudgetAssessment {
+  withinBudget: boolean;
+  exceededBy: string;
+  availableBeforeApproval: string;
+  approvedConsumed: string;
+  monthlyBudget: string;
+  month: string;
+}
+
+export interface OrderListItem {
+  id: string;
+  companyId: string;
+  companyName: string | null;
+  supervisorId: string;
+  supervisorName: string | null;
+  status: string;
+  total: string;
+  intendedMonth?: string | null;
+  remitoNumber?: number | null;
+  createdAt: Date;
+  budgetAssessment?: OrderBudgetAssessment;
+}
+
+interface OrderListItemWithBudgetSource extends OrderListItem {
+  companyMonthlyBudget: string | null;
+}
+
+function formatYearMonth(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function resolveOrderMonth(order: Pick<OrderListItem, "intendedMonth" | "createdAt">): string {
+  if (order.intendedMonth) {
+    return order.intendedMonth;
+  }
+
+  return formatYearMonth(new Date(order.createdAt));
+}
+
+function getMonthBounds(yearMonth: string): { start: Date; end: Date } {
+  const [year, month] = yearMonth.split("-").map((value) => Number(value));
+  return {
+    start: new Date(year, month - 1, 1),
+    end: new Date(year, month, 1),
+  };
+}
+
+async function attachBudgetAssessment(
+  ordersList: OrderListItemWithBudgetSource[]
+): Promise<OrderListItem[]> {
+  if (ordersList.length === 0) {
+    return [];
+  }
+
+  const uniquePairs = new Map<
+    string,
+    { companyId: string; month: string; monthlyBudget: string }
+  >();
+
+  for (const order of ordersList) {
+    const month = resolveOrderMonth(order);
+    const monthlyBudget = order.companyMonthlyBudget ?? "0";
+    uniquePairs.set(`${order.companyId}:${month}`, {
+      companyId: order.companyId,
+      month,
+      monthlyBudget: String(monthlyBudget),
+    });
+  }
+
+  const pairConditions = Array.from(uniquePairs.values()).flatMap(({ companyId, month }) => {
+    const { start, end } = getMonthBounds(month);
+
+    return [
+      and(eq(orders.companyId, companyId), eq(orders.intendedMonth, month)),
+      and(
+        eq(orders.companyId, companyId),
+        isNull(orders.intendedMonth),
+        gte(orders.createdAt, start),
+        lt(orders.createdAt, end)
+      ),
+    ];
+  });
+
+  const approvedOrders = await db
+    .select({
+      companyId: orders.companyId,
+      total: orders.total,
+      intendedMonth: orders.intendedMonth,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.status, "approved"),
+        pairConditions.length > 0 ? or(...pairConditions) : undefined
+      )
+    );
+
+  const approvedByPair = new Map<string, number>();
+
+  for (const approvedOrder of approvedOrders) {
+    const month =
+      approvedOrder.intendedMonth ?? formatYearMonth(new Date(approvedOrder.createdAt));
+    const key = `${approvedOrder.companyId}:${month}`;
+    const current = approvedByPair.get(key) ?? 0;
+    approvedByPair.set(key, current + Number(approvedOrder.total));
+  }
+
+  return ordersList.map((order) => {
+    const month = resolveOrderMonth(order);
+    const key = `${order.companyId}:${month}`;
+    const approvedConsumed = approvedByPair.get(key) ?? 0;
+    const monthlyBudget = Number(order.companyMonthlyBudget ?? 0);
+    const availableBeforeApproval = Math.max(0, monthlyBudget - approvedConsumed);
+    const exceededBy = Math.max(0, Number(order.total) - availableBeforeApproval);
+
+    return {
+      id: order.id,
+      companyId: order.companyId,
+      companyName: order.companyName,
+      supervisorId: order.supervisorId,
+      supervisorName: order.supervisorName,
+      status: order.status,
+      total: order.total,
+      intendedMonth: order.intendedMonth,
+      remitoNumber: order.remitoNumber,
+      createdAt: order.createdAt,
+      budgetAssessment: {
+        withinBudget: exceededBy === 0,
+        exceededBy: String(exceededBy),
+        availableBeforeApproval: String(availableBeforeApproval),
+        approvedConsumed: String(approvedConsumed),
+        monthlyBudget: String(order.companyMonthlyBudget ?? 0),
+        month,
+      },
+    };
+  });
 }
 
 // Helper: Calculate order total from items
@@ -502,7 +641,7 @@ export async function listOrders(
   userId: string,
   userRole: number,
   filters?: OrderListFilters
-) {
+): Promise<OrderListItem[]> {
   /**
    * Lista pedidos según filtros y rol del usuario
    * Supervisores ven solo sus pedidos
@@ -537,6 +676,7 @@ export async function listOrders(
       id: orders.id,
       companyId: orders.companyId,
       companyName: companies.name,
+      companyMonthlyBudget: companies.monthlyBudget,
       supervisorId: orders.supervisorId,
       supervisorName: users.name,
       status: orders.status,
@@ -552,5 +692,13 @@ export async function listOrders(
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(orders.createdAt));
 
-  return result;
+  const normalizedResult: OrderListItem[] = result.map(
+    ({ companyMonthlyBudget: _companyMonthlyBudget, ...order }) => order
+  );
+
+  if (userRole >= ADMIN_ROLE && filters?.status === "sent") {
+    return attachBudgetAssessment(result);
+  }
+
+  return normalizedResult;
 }
