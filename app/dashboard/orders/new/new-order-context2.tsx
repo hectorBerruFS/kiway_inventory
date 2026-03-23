@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Plus, Minus, Trash2, Loader2, Search, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, Loader2, Search, AlertTriangle, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -19,9 +19,11 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 interface Product {
   id: string;
   name: string;
+  sku: string | null;
   brand: string;
   category: string;
   price: string;
+  imageUrl: string | null;
 }
 
 interface Company {
@@ -331,9 +333,18 @@ export default function NewOrderContent() {
                       onClick={() => addToCart(product)}
                     >
                       <CardContent className="flex items-center justify-between p-3">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.brand}</p>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                            {product.imageUrl ? (
+                              <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <Package className="h-6 w-6 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">{product.sku ? `SKU: ${product.sku} | ` : ""}{product.brand}</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-foreground">

@@ -9,9 +9,11 @@ import { eq, sql } from "drizzle-orm";
 
 export interface ProductInput {
   name: string;
+  sku?: string;
   brand: string;
   category: string;
   price: string | number;
+  imageUrl?: string;
 }
 
 export async function createProduct(input: ProductInput) {
@@ -26,9 +28,11 @@ export async function createProduct(input: ProductInput) {
     .insert(products)
     .values({
       name: input.name,
+      sku: input.sku || null,
       brand: input.brand,
       category: input.category,
       price: String(input.price),
+      imageUrl: input.imageUrl || null,
     })
     .returning();
 
@@ -45,9 +49,11 @@ export async function updateProduct(productId: string, input: Partial<ProductInp
 
   const updateData: any = {};
   if (input.name) updateData.name = input.name;
+  if (typeof input.sku !== "undefined") updateData.sku = input.sku || null;
   if (input.brand) updateData.brand = input.brand;
   if (input.category) updateData.category = input.category;
   if (input.price) updateData.price = String(input.price);
+  if (typeof input.imageUrl !== "undefined") updateData.imageUrl = input.imageUrl || null;
 
   if (Object.keys(updateData).length === 0) {
     throw new Error("No hay datos para actualizar");

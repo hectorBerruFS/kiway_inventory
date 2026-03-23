@@ -23,9 +23,11 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 interface Product {
   id: string;
   name: string;
+  sku: string | null;
   brand: string;
   category: string;
   price: string;
+  imageUrl: string | null;
   isActive: boolean;
 }
 
@@ -105,11 +107,20 @@ export default function ProductsPage() {
               .map((product) => (
                 <Card key={product.id}>
                   <CardContent className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.brand} - {formatCurrency(Number(product.price))}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-muted rounded-md overflow-hidden">
+                        {product.imageUrl ? (
+                          <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.sku ? `SKU: ${product.sku} | ` : ""}{product.brand} - {formatCurrency(Number(product.price))}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
@@ -156,16 +167,20 @@ function ProductDialog({
 }) {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(product?.name || "");
+  const [sku, setSku] = useState(product?.sku || "");
   const [brand, setBrand] = useState(product?.brand || "");
   const [category, setCategory] = useState(product?.category || "");
   const [price, setPrice] = useState(product?.price || "");
+  const [imageUrl, setImageUrl] = useState(product?.imageUrl || "");
 
   // Reset form when product changes
   if (open && product && name !== product.name) {
     setName(product.name);
+    setSku(product.sku || "");
     setBrand(product.brand);
     setCategory(product.category);
     setPrice(product.price);
+    setImageUrl(product.imageUrl || "");
   }
 
   if (open && !product && name) {
@@ -177,7 +192,7 @@ function ProductDialog({
     setLoading(true);
 
     try {
-      const body = { name, brand, category, price: Number(price) };
+      const body = { name, sku, brand, category, price: Number(price), imageUrl };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PUT" : "POST";
 
@@ -193,9 +208,11 @@ function ProductDialog({
       mutate("/api/products");
       onOpenChange(false);
       setName("");
+      setSku("");
       setBrand("");
       setCategory("");
       setPrice("");
+      setImageUrl("");
     } catch {
       toast.error("Error al guardar producto");
     } finally {
@@ -217,12 +234,20 @@ function ProductDialog({
             <Input value={name} onChange={(e) => setName(e.target.value)} required className="h-11" />
           </div>
           <div className="flex flex-col gap-2">
+            <Label className="text-foreground">SKU (Opcional)</Label>
+            <Input value={sku} onChange={(e) => setSku(e.target.value)} className="h-11" />
+          </div>
+          <div className="flex flex-col gap-2">
             <Label className="text-foreground">Marca</Label>
             <Input value={brand} onChange={(e) => setBrand(e.target.value)} required className="h-11" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Categoria</Label>
             <Input value={category} onChange={(e) => setCategory(e.target.value)} required className="h-11" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-foreground">URL de Imagen (Opcional)</Label>
+            <Input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="h-11" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Precio</Label>

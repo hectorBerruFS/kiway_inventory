@@ -28,9 +28,11 @@ export async function POST(req: NextRequest) {
   try {
     const product = await createProduct({
       name: body.name,
+      sku: body.sku,
       brand: body.brand,
       category: body.category,
       price: body.price,
+      imageUrl: body.imageUrl,
     });
     return NextResponse.json(product);
   } catch (error: any) {

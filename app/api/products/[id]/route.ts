@@ -27,9 +27,11 @@ export async function PUT(
     // Otherwise use updateProduct for field updates
     const updated = await updateProduct(id, {
       name: body.name,
+      sku: body.sku,
       brand: body.brand,
       category: body.category,
       price: body.price,
+      imageUrl: body.imageUrl,
     });
 
     return NextResponse.json(updated);
