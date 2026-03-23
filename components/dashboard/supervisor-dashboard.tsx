@@ -26,6 +26,11 @@ interface Order {
   status: string;
   total: string;
   createdAt: string;
+  budgetAssessment?: {
+    withinBudget: boolean;
+    exceededBy: string;
+    month: string;
+  };
 }
 
 export function SupervisorDashboard({ userId }: { userId: string }) {
@@ -152,19 +157,41 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
             {recentOrders.map((order) => (
               <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
                 <Card className="hover:bg-accent/50 transition-colors">
-                  <CardContent className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{order.companyName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString("es-AR")}
-                      </p>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{order.companyName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString("es-AR")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">
+                          {formatCurrency(Number(order.total))}
+                        </span>
+                        <StatusBadge status={order.status} />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(Number(order.total))}
-                      </span>
-                      <StatusBadge status={order.status} />
-                    </div>
+                    {order.budgetAssessment && (
+                      <div className="flex items-center justify-between gap-2 border-t pt-2 mt-1">
+                        <p
+                          className={`text-[11px] font-medium ${
+                            order.budgetAssessment.withinBudget
+                              ? "text-green-600"
+                              : "text-amber-700"
+                          }`}
+                        >
+                          {order.budgetAssessment.withinBudget
+                            ? "En presupuesto"
+                            : `Excede por ${formatCurrency(
+                                Number(order.budgetAssessment.exceededBy)
+                              )}`}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground">
+                          Mes: {order.budgetAssessment.month}
+                        </span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </Link>

@@ -42,7 +42,7 @@ export function AdminDashboard() {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   const { data: pendingOrders, isLoading: ordersLoading } = useSWR<Order[]>(
-    `/api/orders?status=sent&month=${currentMonth}`,
+    `/api/orders?status=sent`,
     fetcher
   );
   const { data: monthOrders } = useSWR<Order[]>(`/api/orders?month=${currentMonth}`, fetcher);
@@ -78,7 +78,7 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-3 gap-3">
   {/* Pendientes */}
-  <Link href={{ pathname: "/dashboard/orders", query: { status: "sent", month: currentMonth } }}>
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "sent" } }}>
     <Card className="cursor-pointer hover:shadow-md transition">
       <CardContent className="flex flex-col items-center p-3">
         <Clock className="h-5 w-5 text-chart-3 mb-1" />

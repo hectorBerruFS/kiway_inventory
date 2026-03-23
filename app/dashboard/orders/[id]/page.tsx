@@ -37,6 +37,11 @@ interface OrderDetail {
   createdAt: string;
   remitoNumber?: number | null;
   items: OrderItem[];
+  budgetAssessment?: {
+    withinBudget: boolean;
+    exceededBy: string;
+    month: string;
+  };
 }
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -134,6 +139,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <span className="text-muted-foreground">Total</span>
               <span className="text-lg font-bold text-foreground">{formatCurrency(Number(order.total))}</span>
             </div>
+            {order.budgetAssessment && (
+              <div className="flex justify-between text-sm mt-2 border-t pt-2">
+                <span className="text-muted-foreground">Presupuesto (Mes: {order.budgetAssessment.month})</span>
+                <span
+                  className={`font-medium ${
+                    order.budgetAssessment.withinBudget
+                      ? "text-green-600"
+                      : "text-amber-700"
+                  }`}
+                >
+                  {order.budgetAssessment.withinBudget
+                    ? "En presupuesto"
+                    : `Excede por ${formatCurrency(
+                        Number(order.budgetAssessment.exceededBy)
+                      )}`}
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
 

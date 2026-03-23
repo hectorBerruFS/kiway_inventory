@@ -587,6 +587,7 @@ export interface OrderWithItems {
   intendedMonth?: string | null;
   remitoNumber?: number | null;
   items: any[];
+  budgetAssessment?: OrderBudgetAssessment;
 }
 
 export async function getOrderWithItems(
@@ -607,6 +608,7 @@ export async function getOrderWithItems(
       companyId: orders.companyId,
       intendedMonth: orders.intendedMonth,
       companyName: companies.name,
+      companyMonthlyBudget: companies.monthlyBudget,
       supervisorId: orders.supervisorId,
       supervisorName: users.name,
       status: orders.status,
@@ -634,7 +636,15 @@ export async function getOrderWithItems(
     .from(orderItems)
     .where(eq(orderItems.orderId, orderId));
 
-  return { ...order, items };
+  let budgetAssessment = undefined;
+  if (order.status === "sent" || order.status === "approved" || order.status === "draft" || order.status === "rejected" || order.status === "cancelled") {
+    const assessed = await attachBudgetAssessment([order as any]);
+    budgetAssessment = assessed[0]?.budgetAssessment;
+  }
+
+  const { companyMonthlyBudget: _companyMonthlyBudget, ...cleanOrder } = order as any;
+
+  return { ...cleanOrder, items, budgetAssessment };
 }
 
 export async function listOrders(
@@ -696,7 +706,7 @@ export async function listOrders(
     ({ companyMonthlyBudget: _companyMonthlyBudget, ...order }) => order
   );
 
-  if (userRole >= ADMIN_ROLE && filters?.status === "sent") {
+  if (normalizedResult.some((o) => o.status === "sent" || o.status === "approved" || o.status === "draft" || o.status === "rejected" || o.status === "cancelled")) {
     return attachBudgetAssessment(result);
   }
 
