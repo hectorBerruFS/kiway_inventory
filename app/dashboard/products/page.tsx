@@ -110,7 +110,11 @@ export default function ProductsPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-muted rounded-md overflow-hidden">
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                          <img 
+                            src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
+                            alt={product.name} 
+                            className="h-full w-full object-cover" 
+                          />
                         ) : (
                           <Package className="h-6 w-6 text-muted-foreground" />
                         )}
@@ -118,7 +122,7 @@ export default function ProductsPage() {
                       <div>
                         <p className="text-sm font-medium text-foreground">{product.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {product.sku ? `SKU: ${product.sku} | ` : ""}{product.brand} - {formatCurrency(Number(product.price))}
+                          {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""} - {formatCurrency(Number(product.price))}
                         </p>
                       </div>
                     </div>
@@ -246,8 +250,8 @@ function ProductDialog({
             <Input value={category} onChange={(e) => setCategory(e.target.value)} required className="h-11" />
           </div>
           <div className="flex flex-col gap-2">
-            <Label className="text-foreground">URL de Imagen (Opcional)</Label>
-            <Input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="h-11" />
+            <Label className="text-foreground">Ruta de Imagen (Opcional)</Label>
+            <Input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="/img/products/..." className="h-11" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Precio</Label>
