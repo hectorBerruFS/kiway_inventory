@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useSWR, { mutate } from "swr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -177,29 +177,34 @@ function ProductDialog({
   const [price, setPrice] = useState(product?.price || "");
   const [imageUrl, setImageUrl] = useState(product?.imageUrl || "");
 
-  // Reset form when product changes
-  if (open && product && (name !== (product.name || "") || sku !== (product.sku || ""))) {
-    setName(product.name || "");
-    setSku(product.sku || "");
-    setBrand(product.brand || "");
-    setCategory(product.category || "");
-    setPrice(product.price || "");
-    
-    let initialImg = product.imageUrl || "";
-    if (initialImg.includes('/img/products/') && initialImg.endsWith('.jpg')) {
-      initialImg = initialImg.split('/img/products/').pop()?.replace('.jpg', '') || "";
+  // Manejar el reset cuando se abre para un NUEVO producto
+  useEffect(() => {
+    if (open && !product) {
+      setName("");
+      setSku("");
+      setBrand("");
+      setCategory("");
+      setPrice("");
+      setImageUrl("");
     }
-    setImageUrl(initialImg);
-  }
+  }, [open, product]);
 
-  if (open && !product && (name || sku || brand || category || price || imageUrl)) {
-    setName("");
-    setSku("");
-    setBrand("");
-    setCategory("");
-    setPrice("");
-    setImageUrl("");
-  }
+  // Reset form when product changes (edit mode)
+  useEffect(() => {
+    if (open && product) {
+      setName(product.name || "");
+      setSku(product.sku || "");
+      setBrand(product.brand || "");
+      setCategory(product.category || "");
+      setPrice(product.price || "");
+      
+      let initialImg = product.imageUrl || "";
+      if (initialImg.includes('/img/products/') && initialImg.endsWith('.jpg')) {
+        initialImg = initialImg.split('/img/products/').pop()?.replace('.jpg', '') || "";
+      }
+      setImageUrl(initialImg);
+    }
+  }, [open, product]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
