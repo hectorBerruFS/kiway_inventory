@@ -16,6 +16,10 @@ interface OrderForPdf {
   createdAt: Date | string;
   remitoNumber?: number | null;
   items: OrderItem[];
+  budgetAssessment?: {
+    monthlyBudget: string;
+    month: string;
+  };
 }
 
 function formatCurrency(value: number) {
@@ -41,13 +45,25 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
 
   const styles = StyleSheet.create({
     page: {
-      paddingTop: 28,
+      paddingTop: 35,
       paddingRight: 28,
-      paddingBottom: 24,
+      paddingBottom: 40,
       paddingLeft: 28,
       fontSize: 10,
       fontFamily: "Helvetica",
       color: "#111827",
+    },
+    miniHeader: {
+      position: "absolute",
+      top: 15,
+      left: 28,
+      right: 28,
+      borderBottomWidth: 0.5,
+      borderBottomColor: "#9CA3AF",
+      paddingBottom: 3,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     header: {
       flexDirection: "row",
@@ -57,6 +73,16 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
       paddingBottom: 10,
       marginBottom: 12,
     },
+    budgetBox: {
+      marginTop: 8,
+      padding: 6,
+      backgroundColor: "#F9FAFB",
+      borderWidth: 1,
+      borderColor: "#000",
+      borderRadius: 2,
+      alignItems: "center",
+    },
+    budgetText: { fontSize: 9, fontWeight: 700 },
     brandTitle: { fontSize: 18, fontWeight: 700 },
     brandSubtitle: { fontSize: 9, color: "#4B5563", marginTop: 2 },
     rightHeader: { alignItems: "flex-end", gap: 2 },
@@ -144,6 +170,18 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
       { size: "A4", style: styles.page },
       createElement(
         View,
+        { fixed: true, style: styles.miniHeader },
+        createElement(Text, { style: { fontSize: 8, color: "#4B5563" } }, `REMITO N° ${remitoNumber}`),
+        createElement(
+          Text,
+          {
+            style: { fontSize: 8, color: "#4B5563" },
+            render: ({ pageNumber, totalPages }: any) => `Hoja ${pageNumber} de ${totalPages}`,
+          }
+        )
+      ),
+      createElement(
+        View,
         { style: styles.header },
         createElement(
           View,
@@ -172,7 +210,13 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
           View,
           { style: { alignItems: "flex-end" } },
           createElement(Text, { style: styles.detailLabel }, "Solicitado por"),
-          createElement(Text, { style: styles.detailValue }, order.supervisorName ?? "-")
+          createElement(Text, { style: styles.detailValue }, order.supervisorName ?? "-"),
+          order.budgetAssessment && createElement(
+            View,
+            { style: styles.budgetBox },
+            createElement(Text, { style: styles.detailLabel }, `Presupuesto (${order.budgetAssessment.month})`),
+            createElement(Text, { style: styles.budgetText }, formatCurrency(Number(order.budgetAssessment.monthlyBudget)))
+          )
         )
       ),
       createElement(

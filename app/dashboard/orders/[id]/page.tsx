@@ -41,6 +41,7 @@ interface OrderDetail {
     withinBudget: boolean;
     exceededBy: string;
     month: string;
+    monthlyBudget: string;
   };
 }
 
