@@ -95,9 +95,9 @@ export default function NewOrderContent() {
     const q = search.toLowerCase();
     return products.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.brand || "").toLowerCase().includes(q) ||
+        (p.category || "").toLowerCase().includes(q)
     );
   }, [products, search]);
 

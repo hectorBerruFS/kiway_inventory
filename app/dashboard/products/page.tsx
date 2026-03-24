@@ -39,9 +39,9 @@ export default function ProductsPage() {
 
   const filtered = products?.filter(
     (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
+      (p.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.brand || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.category || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const categories = filtered ? [...new Set(filtered.map((p) => p.category))] : [];
@@ -184,11 +184,21 @@ function ProductDialog({
     setBrand(product.brand);
     setCategory(product.category);
     setPrice(product.price);
-    setImageUrl(product.imageUrl || "");
+    
+    let initialImg = product.imageUrl || "";
+    if (initialImg.includes('/img/products/') && initialImg.endsWith('.jpg')) {
+      initialImg = initialImg.split('/img/products/').pop()?.replace('.jpg', '') || "";
+    }
+    setImageUrl(initialImg);
   }
 
-  if (open && !product && name) {
-    // Only reset on opening with no product
+  if (open && !product && (name || sku || brand || category || price || imageUrl)) {
+    setName("");
+    setSku("");
+    setBrand("");
+    setCategory("");
+    setPrice("");
+    setImageUrl("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -196,7 +206,12 @@ function ProductDialog({
     setLoading(true);
 
     try {
-      const body = { name, sku, brand, category, price: Number(price), imageUrl };
+      let finalImageUrl = imageUrl;
+      if (imageUrl && !imageUrl.includes('/')) {
+        finalImageUrl = `/img/products/${imageUrl.replace(/\.jpg$/, '')}.jpg`;
+      }
+
+      const body = { name, sku, brand, category, price: Number(price), imageUrl: finalImageUrl || 'img/products/default.jpg' };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PUT" : "POST";
 
@@ -235,23 +250,23 @@ function ProductDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Nombre</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required className="h-11" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} required className="h-11" placeholder="Ej: Resma A4" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">SKU (Opcional)</Label>
-            <Input value={sku} onChange={(e) => setSku(e.target.value)} className="h-11" />
+            <Input value={sku} onChange={(e) => setSku(e.target.value)} className="h-11" placeholder="Ej: RES-A4-001" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Marca</Label>
-            <Input value={brand} onChange={(e) => setBrand(e.target.value)} required className="h-11" />
+            <Input value={brand} onChange={(e) => setBrand(e.target.value)} required className="h-11" placeholder="Ej: Ledesma" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Categoria</Label>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} required className="h-11" />
+            <Input value={category} onChange={(e) => setCategory(e.target.value)} required className="h-11" placeholder="Ej: Librería" />
           </div>
           <div className="flex flex-col gap-2">
-            <Label className="text-foreground">Ruta de Imagen (Opcional)</Label>
-            <Input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="/img/products/..." className="h-11" />
+            <Label className="text-foreground">Nombre de Imagen (Opcional)</Label>
+            <Input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="h-11" placeholder="Ej: zapatillas_nike" />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Precio</Label>
@@ -262,6 +277,7 @@ function ProductDialog({
               onChange={(e) => setPrice(e.target.value)}
               required
               className="h-11"
+              placeholder="Ej: 1500.50"
             />
           </div>
           <Button type="submit" disabled={loading} className="h-11">
