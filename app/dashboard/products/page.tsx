@@ -127,7 +127,11 @@ export default function ProductsPage() {
                             <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border">
                               {product.imageUrl ? (
                                 <img 
-                                  src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
+                                  src={
+                                    product.imageUrl.startsWith('public/') 
+                                      ? product.imageUrl.replace(/^public\//, '/') 
+                                      : (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`)
+                                  } 
                                   alt={product.name} 
                                   className="h-full w-full object-cover" 
                                 />
@@ -235,7 +239,7 @@ function ProductDialog({
         finalImageUrl = `/img/products/${imageUrl.replace(/\.jpg$/, '')}.jpg`;
       }
 
-      const body = { name, sku, brand, category, price: Number(price), imageUrl: finalImageUrl || 'img/products/default.jpg' };
+      const body = { name, sku, brand, category, price: Number(price), imageUrl: finalImageUrl || '/img/products/default.jpg' };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PUT" : "POST";
 

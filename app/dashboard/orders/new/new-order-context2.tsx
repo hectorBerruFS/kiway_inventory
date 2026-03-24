@@ -352,11 +352,15 @@ export default function NewOrderContent() {
                               <div className="flex items-center gap-3">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border">
                                   {product.imageUrl ? (
-                                    <img 
-                                      src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
-                                      alt={product.name} 
-                                      className="h-full w-full object-cover" 
-                                    />
+                                      <img 
+                                        src={
+                                          product.imageUrl.startsWith('public/') 
+                                            ? product.imageUrl.replace(/^public\//, '/') 
+                                            : (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`)
+                                        } 
+                                        alt={product.name} 
+                                        className="h-full w-full object-cover" 
+                                      />
                                   ) : (
                                     <Package className="h-6 w-6 text-muted-foreground" />
                                   )}
