@@ -178,12 +178,12 @@ function ProductDialog({
   const [imageUrl, setImageUrl] = useState(product?.imageUrl || "");
 
   // Reset form when product changes
-  if (open && product && name !== product.name) {
-    setName(product.name);
+  if (open && product && (name !== (product.name || "") || sku !== (product.sku || ""))) {
+    setName(product.name || "");
     setSku(product.sku || "");
-    setBrand(product.brand);
-    setCategory(product.category);
-    setPrice(product.price);
+    setBrand(product.brand || "");
+    setCategory(product.category || "");
+    setPrice(product.price || "");
     
     let initialImg = product.imageUrl || "";
     if (initialImg.includes('/img/products/') && initialImg.endsWith('.jpg')) {
