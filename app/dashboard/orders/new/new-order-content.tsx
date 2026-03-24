@@ -9,6 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ArrowLeft, Plus, Minus, Trash2, Loader2, Search, AlertTriangle, CheckCircle2, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -472,60 +478,75 @@ export default function NewOrderContent() {
             ))}
           </div>
         ) : (
-          !isLimitReached && categories.map((category) => (
-            <div key={category} className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {category}
-              </h3>
-              {filteredProducts
-                .filter((p) => p.category === category)
-                .map((product) => {
-                  const inCart = cart.find((i) => i.productId === product.id);
-                  return (
-                    <Card
-                      key={product.id}
-                      className="cursor-pointer hover:bg-accent/50 transition-colors"
-                      onClick={() => addToCart(product)}
-                    >
-                      <CardContent className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
-                            {product.imageUrl ? (
-                              <img 
-                                src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
-                                alt={product.name} 
-                                className="h-full w-full object-cover" 
-                              />
-                            ) : (
-                              <Package className="h-6 w-6 text-muted-foreground" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-foreground">
-                            {formatCurrency(Number(product.price))}
-                          </span>
-                          {inCart && (
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground font-medium">
-                              {inCart.quantity}
-                            </span>
-                          )}
-                          {!inCart && (
-                            <Plus className="h-4 w-4 text-primary" />
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-            </div>
-          ))
+          !isLimitReached && (
+            <Accordion type="single" collapsible className="w-full">
+              {categories.map((category) => (
+                <AccordionItem key={category} value={category} className="border-b border-muted">
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold uppercase tracking-wide text-foreground">
+                        {category}
+                      </span>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        {filteredProducts.filter(p => p.category === category).length}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-col gap-2 pt-1 pb-4">
+                      {filteredProducts
+                        .filter((p) => p.category === category)
+                        .map((product) => {
+                          const inCart = cart.find((i) => i.productId === product.id);
+                          return (
+                            <Card
+                              key={product.id}
+                              className="cursor-pointer hover:bg-accent/50 transition-colors border-none bg-muted/30"
+                              onClick={() => addToCart(product)}
+                            >
+                              <CardContent className="flex items-center justify-between p-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border">
+                                    {product.imageUrl ? (
+                                      <img 
+                                        src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
+                                        alt={product.name} 
+                                        className="h-full w-full object-cover" 
+                                      />
+                                    ) : (
+                                      <Package className="h-6 w-6 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">{product.name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-foreground">
+                                    {formatCurrency(Number(product.price))}
+                                  </span>
+                                  {inCart && (
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground font-medium">
+                                      {inCart.quantity}
+                                    </span>
+                                  )}
+                                  {!inCart && (
+                                    <Plus className="h-4 w-4 text-primary" />
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )
         )}
       </div>
     </div>

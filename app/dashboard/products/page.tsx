@@ -14,6 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Plus, Search, Pencil, Trash2, Package, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -97,58 +103,71 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
       ) : (
-        categories.map((category) => (
-          <div key={category} className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {category}
-            </h3>
-            {filtered
-              .filter((p) => p.category === category)
-              .map((product) => (
-                <Card key={product.id}>
-                  <CardContent className="flex items-center justify-between p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-muted rounded-md overflow-hidden">
-                        {product.imageUrl ? (
-                          <img 
-                            src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
-                            alt={product.name} 
-                            className="h-full w-full object-cover" 
-                          />
-                        ) : (
-                          <Package className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""} - {formatCurrency(Number(product.price))}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => openEdit(product)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        ))
+        <Accordion type="single" collapsible className="w-full">
+          {categories.map((category) => (
+            <AccordionItem key={category} value={category} className="border-b border-muted">
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold uppercase tracking-wide text-foreground">
+                    {category}
+                  </span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {filtered?.filter(p => p.category === category).length}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-3 pt-1 pb-4">
+                  {filtered
+                    ?.filter((p) => p.category === category)
+                    .map((product) => (
+                      <Card key={product.id} className="border-none bg-muted/30">
+                        <CardContent className="flex items-center justify-between p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border">
+                              {product.imageUrl ? (
+                                <img 
+                                  src={product.imageUrl.startsWith('public/') ? product.imageUrl.replace(/^public\//, '/') : product.imageUrl} 
+                                  alt={product.name} 
+                                  className="h-full w-full object-cover" 
+                                />
+                              ) : (
+                                <Package className="h-6 w-6 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""} - {formatCurrency(Number(product.price))}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openEdit(product)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => handleDelete(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       )}
 
       <ProductDialog

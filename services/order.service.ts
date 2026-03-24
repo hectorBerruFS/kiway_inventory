@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { orders, orderItems, products, companies, users, remitos } from "@/lib/db/schema";
-import { eq, and, sql, desc, isNull, gte, lt, or } from "drizzle-orm";
+import { eq, and, sql, desc, isNull, gte, lt, or, inArray } from "drizzle-orm";
 import { checkMonthlyOrderLimit } from "./budget.service";
 import { getProductsByIds } from "./product.service";
 import { validateAuthorization, consumeAuthorization } from "./authorization.service";
@@ -374,7 +374,7 @@ export async function approveOrder(
    * Validaciones:
    * - Estado debe ser "sent"
    * - Solo admin puede aprobar
-   * - Actualiza snapshots desde productos actuales
+   * - Actualiza snapshots desde productos actuales (re-congelar precios al momento de aprobar)
    */
 
   const ADMIN_ROLE = 2;
@@ -392,42 +392,83 @@ export async function approveOrder(
     throw new Error(`No se puede aprobar un pedido en estado ${order.status}`);
   }
 
-  // Update snapshots from current product data
+  // 1. Obtener todos los items del pedido primero para evitar N+1
   const items = await db
     .select()
     .from(orderItems)
     .where(eq(orderItems.orderId, orderId));
 
-  for (const item of items) {
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.id, item.productId));
-
-    if (product) {
-      await db
-        .update(orderItems)
-        .set({
-          nameSnapshot: product.name,
-          brandSnapshot: product.brand,
-          priceSnapshot: String(product.price),
-        })
-        .where(eq(orderItems.id, item.id));
-    }
+  if (items.length === 0) {
+    throw new Error("El pedido no tiene items");
   }
 
-  const [updated] = await db
-    .update(orders)
-    .set({ status: "approved" })
-    .where(eq(orders.id, orderId))
-    .returning();
+  // 2. Obtener la información actual de todos los productos en UN solo query
+  const productIds = Array.from(new Set(items.map((i) => i.productId)));
+  const productMap = await getProductsByIds(productIds);
 
-  await db
-    .insert(remitos)
-    .values({ orderId })
-    .onConflictDoNothing({ target: remitos.orderId });
+  // 3. Ejecutar actualizaciones en una sola transacción para eficiencia e integridad
+  const itemsWithProducts = items.map((item) => {
+    const product = productMap.get(item.productId);
+    if (!product) {
+      throw new Error(`Producto no encontrado para el item ${item.id}`);
+    }
 
-  return updated;
+    return { item, product };
+  });
+
+  await db.transaction(async (tx) => {
+    const itemIds = itemsWithProducts.map(({ item }) => item.id);
+    const nameSnapshotCase = sql<string>`case
+      ${sql.join(
+        itemsWithProducts.map(
+          ({ item, product }) => sql`when ${orderItems.id} = ${item.id} then ${product.name}`
+        ),
+        sql.raw(" ")
+      )}
+      else ${orderItems.nameSnapshot}
+    end`;
+    const brandSnapshotCase = sql<string>`case
+      ${sql.join(
+        itemsWithProducts.map(
+          ({ item, product }) => sql`when ${orderItems.id} = ${item.id} then ${product.brand}`
+        ),
+        sql.raw(" ")
+      )}
+      else ${orderItems.brandSnapshot}
+    end`;
+    const priceSnapshotCase = sql<string>`case
+      ${sql.join(
+        itemsWithProducts.map(
+          ({ item, product }) => sql`when ${orderItems.id} = ${item.id} then ${String(product.price)}`
+        ),
+        sql.raw(" ")
+      )}
+      else ${orderItems.priceSnapshot}
+    end`;
+
+    await tx
+      .update(orderItems)
+      .set({
+        nameSnapshot: nameSnapshotCase,
+        brandSnapshot: brandSnapshotCase,
+        priceSnapshot: priceSnapshotCase,
+      })
+      .where(and(eq(orderItems.orderId, orderId), inArray(orderItems.id, itemIds)));
+
+    // Actualizar estado del pedido
+    await tx
+      .update(orders)
+      .set({ status: "approved" })
+      .where(eq(orders.id, orderId));
+
+    // Asegurar que exista el registro de remito para numeración
+    await tx
+      .insert(remitos)
+      .values({ orderId })
+      .onConflictDoNothing({ target: remitos.orderId });
+  });
+
+  return { ...order, status: "approved" };
 }
 
 export async function rejectOrder(
