@@ -17,6 +17,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No se encontró el archivo" }, { status: 400 });
     }
 
+    // Validación de tamaño (500kb)
+    const MAX_SIZE = 500 * 1024;
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: "La imagen excede los 500kb permitidos" }, { status: 400 });
+    }
+
+    // Validación de tipo de archivo
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Formato no permitido. Solo jpg, png o webp" }, { status: 400 });
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

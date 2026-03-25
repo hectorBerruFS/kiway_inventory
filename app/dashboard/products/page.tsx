@@ -231,6 +231,22 @@ function ProductDialog({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validaciones de cliente
+      const MAX_SIZE = 500 * 1024; // 500kb
+      const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+      
+      if (file.size > MAX_SIZE) {
+        toast.error("La imagen excede los 500kb permitidos");
+        e.target.value = ""; // Limpiar el input
+        return;
+      }
+      
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast.error("Formato no permitido. Solo jpg, png o webp");
+        e.target.value = ""; // Limpiar el input
+        return;
+      }
+
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
