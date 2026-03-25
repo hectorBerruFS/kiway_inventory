@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import useSWR, { mutate } from "swr";
+import Image from "next/image";
+import { normalizeProductImageUrl } from "@/lib/images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,13 +128,11 @@ export default function ProductsPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border">
                               {product.imageUrl ? (
-                                <img 
-                                  src={
-                                    product.imageUrl.startsWith('public/') 
-                                      ? product.imageUrl.replace(/^public\//, '/') 
-                                      : (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`)
-                                  } 
+                                <Image 
+                                  src={normalizeProductImageUrl(product.imageUrl)} 
                                   alt={product.name} 
+                                  width={48}
+                                  height={48}
                                   className="h-full w-full object-cover" 
                                 />
                               ) : (
@@ -199,6 +199,8 @@ function ProductDialog({
   const [category, setCategory] = useState(product?.category || "");
   const [price, setPrice] = useState(product?.price || "");
   const [imageUrl, setImageUrl] = useState(product?.imageUrl || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Manejar el reset cuando se abre para un NUEVO producto
   useEffect(() => {
@@ -220,14 +222,23 @@ function ProductDialog({
       setBrand(product.brand || "");
       setCategory(product.category || "");
       setPrice(product.price || "");
-      
-      let initialImg = product.imageUrl || "";
-      if (initialImg.includes('/img/products/') && initialImg.endsWith('.jpg')) {
-        initialImg = initialImg.split('/img/products/').pop()?.replace('.jpg', '') || "";
-      }
-      setImageUrl(initialImg);
+      setImageUrl(product.imageUrl || "");
+      setImageFile(null);
+      setImagePreview(product.imageUrl ? normalizeProductImageUrl(product.imageUrl) : null);
     }
   }, [open, product]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -235,11 +246,30 @@ function ProductDialog({
 
     try {
       let finalImageUrl = imageUrl;
-      if (imageUrl && !imageUrl.includes('/')) {
-        finalImageUrl = `/img/products/${imageUrl.replace(/\.jpg$/, '')}.jpg`;
+
+      // Si hay un archivo nuevo, subirlo a Cloudinary
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) throw new Error("Error al subir imagen");
+        const uploadData = await uploadRes.json();
+        finalImageUrl = uploadData.url;
       }
 
-      const body = { name, sku, brand, category, price: Number(price), imageUrl: finalImageUrl || '/img/products/default.jpg' };
+      const body = { 
+        name, 
+        sku, 
+        brand, 
+        category, 
+        price: Number(price), 
+        imageUrl: finalImageUrl || '/img/products/default.jpg' 
+      };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PUT" : "POST";
 
@@ -293,8 +323,28 @@ function ProductDialog({
             <Input value={category} onChange={(e) => setCategory(e.target.value)} required className="h-11" placeholder="Ej: Librería" />
           </div>
           <div className="flex flex-col gap-2">
-            <Label className="text-foreground">Nombre de Imagen (Opcional)</Label>
-            <Input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="h-11" placeholder="Ej: zapatillas_nike" />
+            <Label className="text-foreground">Imagen del Producto</Label>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-center h-32 w-full bg-muted rounded-md overflow-hidden border">
+                {imagePreview ? (
+                  <Image src={imagePreview} alt="Preview" width={128} height={128} className="h-full w-full object-contain" />
+                ) : (
+                  <Package className="h-12 w-12 text-muted-foreground" />
+                )}
+              </div>
+              <Input type="file" accept="image/*" onChange={handleFileChange} className="h-11" />
+              <p className="text-[10px] text-muted-foreground">O ingresa una URL manual si prefieres:</p>
+              <Input 
+                type="text" 
+                value={imageUrl} 
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  setImagePreview(e.target.value);
+                }} 
+                className="h-9 text-xs" 
+                placeholder="https://..." 
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-foreground">Precio</Label>
