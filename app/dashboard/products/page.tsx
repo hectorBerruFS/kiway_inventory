@@ -22,9 +22,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Plus, Search, Pencil, Trash2, Package, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Package, Loader2, FileJson, Upload } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
+import Papa from "papaparse";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -43,6 +44,7 @@ export default function ProductsPage() {
   const { data: products, isLoading } = useSWR<Product[]>("/api/products", fetcher);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filtered = products?.filter(
@@ -75,10 +77,16 @@ export default function ProductsPage() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Productos</h1>
-        <Button size="sm" className="gap-1" onClick={openNew}>
-          <Plus className="h-4 w-4" />
-          Nuevo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-1" onClick={() => setBulkDialogOpen(true)}>
+            <FileJson className="h-4 w-4" />
+            Actualizar Precios
+          </Button>
+          <Button size="sm" className="gap-1" onClick={openNew}>
+            <Plus className="h-4 w-4" />
+            Nuevo
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
@@ -178,6 +186,12 @@ export default function ProductsPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         product={editingProduct}
+      />
+
+      <BulkPriceUpdateDialog 
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        products={products || []}
       />
     </div>
   );
@@ -378,6 +392,154 @@ function ProductDialog({
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : product ? "Guardar Cambios" : "Crear Producto"}
           </Button>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BulkPriceUpdateDialog({
+  open,
+  onOpenChange,
+  products,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  products: Product[];
+}) {
+  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<{ id: string; name: string; sku: string; oldPrice: number; newPrice: number }[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setErrors([]);
+      
+      Papa.parse(selectedFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results: Papa.ParseResult<any>) => {
+          const updates: any[] = [];
+          const errs: string[] = [];
+
+          results.data.forEach((row: any, index: number) => {
+            const sku = row.sku?.trim();
+            const newPrice = parseFloat(row.price);
+
+            if (!sku || isNaN(newPrice)) {
+              errs.push(`Fila ${index + 1}: SKU o precio inválido`);
+              return;
+            }
+
+            const product = products.find(p => p.sku === sku);
+            if (!product) {
+              errs.push(`Fila ${index + 1}: SKU "${sku}" no encontrado`);
+              return;
+            }
+
+            updates.push({
+              id: product.id,
+              name: product.name,
+              sku: product.sku,
+              oldPrice: Number(product.price),
+              newPrice: newPrice
+            });
+          });
+
+          setPreview(updates);
+          setErrors(errs);
+        }
+      });
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (preview.length === 0) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/products/bulk-update-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          updates: preview.map(p => ({ id: p.id, price: p.newPrice }))
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error en la actualización");
+
+      toast.success("Precios actualizados masivamente");
+      mutate("/api/products");
+      onOpenChange(false);
+      setFile(null);
+      setPreview([]);
+    } catch (error) {
+      toast.error("Error al actualizar precios");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>Actualización Masiva de Precios</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-2">
+            <Label>Seleccionar archivo CSV (columnas: sku, price)</Label>
+            <Input type="file" accept=".csv" onChange={handleFileChange} className="h-11" />
+          </div>
+
+          {errors.length > 0 && (
+            <div className="bg-destructive/10 border border-destructive rounded-md p-3">
+              <p className="text-xs font-bold text-destructive mb-1">Errores encontrados:</p>
+              <ul className="text-[10px] text-destructive list-disc pl-4 max-h-20 overflow-y-auto">
+                {errors.map((err, i) => <li key={i}>{err}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {preview.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-bold">Resumen de cambios ({preview.length}):</p>
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-2 text-left">SKU</th>
+                      <th className="p-2 text-left">Producto</th>
+                      <th className="p-2 text-right">Anterior</th>
+                      <th className="p-2 text-right">Nuevo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.map((p, i) => (
+                      <tr key={i} className="border-t">
+                        <td className="p-2 font-mono text-[10px]">{p.sku}</td>
+                        <td className="p-2 truncate max-w-[150px]">{p.name}</td>
+                        <td className="p-2 text-right text-muted-foreground">{formatCurrency(p.oldPrice)}</td>
+                        <td className="p-2 text-right font-bold text-primary">{formatCurrency(p.newPrice)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <Button 
+            onClick={handleConfirm} 
+            disabled={loading || preview.length === 0} 
+            className="w-full h-11"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirmar y Actualizar Precios"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
