@@ -249,21 +249,21 @@ export default function NewOrderContent() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center gap-3">
         <Link href="/dashboard/orders">
           <Button variant="ghost" size="icon" className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <h1 className="text-xl font-bold text-foreground">Nuevo Pedido</h1>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Nuevo Pedido</h1>
       </div>
 
       <div className="flex flex-col gap-2">
         <Label className="text-foreground">Empresa</Label>
         <div className="flex gap-2">
           <Select value={companyId} onValueChange={setCompanyId}>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 md:h-14">
               <SelectValue placeholder="Seleccionar empresa" />
             </SelectTrigger>
             <SelectContent>
@@ -276,7 +276,7 @@ export default function NewOrderContent() {
           </Select>
 
           <Select value={intendedMonth} onValueChange={(v) => setIntendedMonth(v)}>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 md:h-14">
               <SelectValue placeholder="Periodo" />
             </SelectTrigger>
             <SelectContent>
@@ -289,7 +289,7 @@ export default function NewOrderContent() {
 
       {selectedCompany && hasExtraAuth && (
         <Card className="border-green-500 bg-green-50/30">
-          <CardContent className="p-4 flex items-center gap-3">
+          <CardContent className="p-4 flex items-center gap-3 md:p-6 md:gap-4">
             <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
             <div className="flex flex-col">
               <p className="font-bold text-sm text-green-800">Pedido extra autorizado</p>
@@ -303,7 +303,7 @@ export default function NewOrderContent() {
 
       {selectedCompany && isLimitReached && !hasExtraAuth && (
         <Card className="border-destructive bg-destructive/5">
-          <CardContent className="p-4 flex flex-col gap-3">
+          <CardContent className="p-4 flex flex-col gap-3 md:p-6 md:gap-5">
             <div className="flex items-start gap-3 text-destructive">
               <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-1">
@@ -346,8 +346,8 @@ export default function NewOrderContent() {
 
       {selectedCompany && !isLimitReached && (
         <Card className={`sticky top-0 z-10 ${isOverBudget ? "border-destructive" : (projectedBudget?.isCommittedExceeded ? "border-amber-500" : "")}`}>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between text-sm">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between text-sm md:text-base">
               <span className="text-muted-foreground">Presupuesto disponible:</span>
               <span className={`font-semibold ${isOverBudget ? "text-destructive" : "text-foreground"}`}>
                 {formatCurrency(displayedAvailable)}
@@ -377,12 +377,12 @@ export default function NewOrderContent() {
 
       {!isLimitReached && cart.length > 0 && (
         <Card>
-          <CardHeader className="p-3 pb-2">
-            <CardTitle className="text-sm text-foreground">
+          <CardHeader className="p-3 pb-2 md:p-6 md:pb-4">
+            <CardTitle className="text-sm text-foreground md:text-base">
               Carrito ({cart.length} productos)
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0">
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
             <div className="flex flex-col gap-2">
               {cart.map((item) => (
                 <div
@@ -390,7 +390,7 @@ export default function NewOrderContent() {
                   className="flex items-center justify-between rounded-lg bg-muted p-2"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
+                    <p className="text-sm font-medium text-foreground truncate md:text-base">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatCurrency(item.price)} c/u
                     </p>
@@ -429,7 +429,7 @@ export default function NewOrderContent() {
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
               <span className="text-sm font-semibold text-foreground">Total:</span>
-              <span className="text-lg font-bold text-foreground">{formatCurrency(cartTotal)}</span>
+              <span className="text-lg font-bold text-foreground md:text-xl lg:text-2xl">{formatCurrency(cartTotal)}</span>
             </div>
           </CardContent>
         </Card>
@@ -439,14 +439,14 @@ export default function NewOrderContent() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            className="flex-1 h-12"
+            className="flex-1 h-12 md:h-14 md:text-base"
             onClick={() => handleSubmit(true)}
             disabled={loading}
           >
             Guardar Borrador
           </Button>
           <Button
-            className="flex-1 h-12"
+            className="flex-1 h-12 md:h-14 md:text-base"
             onClick={() => handleSubmit(false)}
             disabled={loading}
           >
@@ -458,7 +458,7 @@ export default function NewOrderContent() {
       <div className="flex flex-col gap-3">
         {!isLimitReached && (
           <>
-            <h2 className="text-lg font-bold text-foreground">Catalogo de Productos</h2>
+            <h2 className="text-lg font-bold text-foreground md:text-xl lg:text-2xl">Catalogo de Productos</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -484,7 +484,7 @@ export default function NewOrderContent() {
                 <AccordionItem key={category} value={category} className="border-b border-muted">
                   <AccordionTrigger className="hover:no-underline py-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold uppercase tracking-wide text-foreground">
+                      <span className="text-sm font-bold uppercase tracking-wide text-foreground md:text-base">
                         {category}
                       </span>
                       <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -504,9 +504,9 @@ export default function NewOrderContent() {
                               className="cursor-pointer hover:bg-accent/50 transition-colors border-none bg-muted/30"
                               onClick={() => addToCart(product)}
                             >
-                              <CardContent className="flex items-center justify-between p-3">
+                              <CardContent className="flex items-center justify-between p-3 md:p-4 lg:p-5">
                                 <div className="flex items-center gap-3">
-                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border">
+                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border md:h-16 md:w-16">
                                     {product.imageUrl ? (
                                       <img 
                                         src={
@@ -522,7 +522,7 @@ export default function NewOrderContent() {
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-foreground">{product.name}</p>
+                                    <p className="text-sm font-medium text-foreground md:text-base">{product.name}</p>
                                     <p className="text-xs text-muted-foreground">
                                       {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""}
                                     </p>

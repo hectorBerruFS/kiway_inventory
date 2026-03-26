@@ -62,10 +62,10 @@ export default function CompaniesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Empresas</h1>
-        <Button size="sm" className="gap-1" onClick={openNew}>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Empresas</h1>
+        <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm" onClick={openNew}>
           <Plus className="h-4 w-4" />
           Nueva
         </Button>
@@ -85,7 +85,7 @@ export default function CompaniesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4 lg:gap-6">
           {companies.map((company) => {
             const budget = Number(company.monthlyBudget);
             const consumed = Number(company.consumedBudget);
@@ -94,14 +94,14 @@ export default function CompaniesPage() {
 
             return (
               <Card key={company.id}>
-                <CardContent className="p-4">
+                <CardContent className="p-4 md:p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                        <Building2 className="h-4 w-4 text-accent-foreground" />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent md:h-11 md:w-11">
+                        <Building2 className="h-4 w-4 text-accent-foreground md:h-5 md:w-5" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-foreground">{company.name}</p>
+                        <p className="font-semibold text-sm text-foreground md:text-base">{company.name}</p>
                         <p className="text-xs text-muted-foreground">
                           Supervisor: {company.supervisorName}
                         </p>
@@ -118,11 +118,11 @@ export default function CompaniesPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-muted-foreground">Presupuesto mensual</span>
                       <span className="font-semibold text-foreground">{formatCurrency(budget)}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-muted-foreground">Consumido este mes</span>
                       <span className={isOverBudget ? "font-semibold text-destructive" : "text-foreground"}>
                         {formatCurrency(consumed)}
@@ -243,7 +243,7 @@ function CompanyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm md:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {company ? "Editar Empresa" : "Nueva Empresa"}
@@ -290,7 +290,7 @@ function CompanyDialog({
             </Select>
           </div>
 
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} className="md:h-12 md:text-base">
             {loading ? "Guardando..." : company ? "Guardar Cambios" : "Crear Empresa"}
           </Button>
         </form>

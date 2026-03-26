@@ -44,11 +44,11 @@ export default function OrdersPage() {
   const { data: orders, isLoading } = useSWR(url, fetcher);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Pedidos</h1>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Pedidos</h1>
         <Link href="/dashboard/orders/new">
-          <Button size="sm" className="gap-1">
+          <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm">
             <Plus className="h-4 w-4" />
             Nuevo
           </Button>
@@ -63,7 +63,7 @@ export default function OrdersPage() {
               variant={statusFilter === f.value ? "default" : "outline"}
               size="sm"
               onClick={() => setStatusFilter(f.value)}
-              className="shrink-0 text-xs h-8"
+              className="shrink-0 text-xs h-8 md:h-10 md:px-4 md:text-sm"
             >
               {f.label}
             </Button>
@@ -76,14 +76,14 @@ export default function OrdersPage() {
             type="month"
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
-            className="h-9 text-xs w-[180px]"
+            className="h-9 text-xs w-[180px] md:h-10 md:text-sm md:w-[220px]"
           />
           {monthFilter && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMonthFilter("")}
-              className="text-[10px] h-7 px-2"
+              className="text-[10px] h-7 px-2 md:text-xs md:h-8"
             >
               Limpiar mes
             </Button>
@@ -99,10 +99,10 @@ export default function OrdersPage() {
         </div>
       ) : !orders || orders.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-            <ShoppingCart className="h-12 w-12 text-muted-foreground mb-3" />
-            <p className="text-sm font-medium text-foreground">No hay pedidos</p>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="flex flex-col items-center justify-center p-10 text-center md:p-16">
+            <ShoppingCart className="h-12 w-12 text-muted-foreground mb-3 md:h-16 md:w-16" />
+            <p className="text-sm font-medium text-foreground md:text-base">No hay pedidos</p>
+            <p className="text-xs text-muted-foreground mt-1 md:text-sm">
               Crea tu primer pedido para comenzar
             </p>
           </CardContent>
@@ -112,16 +112,16 @@ export default function OrdersPage() {
           {orders.map((order) => (
             <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
               <Card className="hover:bg-accent/50 transition-colors">
-                <CardContent className="p-3">
+                <CardContent className="p-3 md:p-5">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-foreground">{order.companyName}</p>
+                    <p className="text-sm font-semibold text-foreground md:text-base">{order.companyName}</p>
                     <StatusBadge status={order.status} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground md:text-sm">
                       {order.supervisorName} - {formatDate(order.createdAt)}
                     </p>
-                    <span className="text-sm font-bold text-foreground">
+                    <span className="text-sm font-bold text-foreground md:text-base">
                       {formatCurrency(Number(order.total))}
                     </span>
                   </div>
