@@ -32,7 +32,7 @@ export async function createProduct(input: ProductInput) {
       brand: input.brand,
       category: input.category,
       price: String(input.price),
-      imageUrl: input.imageUrl || null,
+      imageUrl: input.imageUrl?.trim() || null,
     })
     .returning();
 
@@ -53,7 +53,7 @@ export async function updateProduct(productId: string, input: Partial<ProductInp
   if (input.brand) updateData.brand = input.brand;
   if (input.category) updateData.category = input.category;
   if (input.price) updateData.price = String(input.price);
-  if (typeof input.imageUrl !== "undefined") updateData.imageUrl = input.imageUrl || null;
+  if (typeof input.imageUrl !== "undefined") updateData.imageUrl = input.imageUrl?.trim() || null;
 
   if (Object.keys(updateData).length === 0) {
     throw new Error("No hay datos para actualizar");

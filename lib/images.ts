@@ -5,12 +5,16 @@
 export function normalizeProductImageUrl(url: string | null | undefined): string {
   if (!url) return "/img/products/default.jpg";
   
+  // Limpiar espacios o caracteres de control (como saltos de línea) que rompen el componente Image
+  const cleanUrl = url.trim();
+  if (!cleanUrl) return "/img/products/default.jpg";
+  
   // Si ya es una URL completa (http, https, data), retornarla tal cual
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
-    return url;
+  if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://") || cleanUrl.startsWith("data:")) {
+    return cleanUrl;
   }
 
-  let path = url;
+  let path = cleanUrl;
 
   // Manejar el prefijo 'public/' si existe en la base de datos
   if (path.startsWith("public/")) {

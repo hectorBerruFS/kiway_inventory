@@ -368,8 +368,9 @@ function ProductDialog({
                 type="text" 
                 value={imageUrl} 
                 onChange={(e) => {
-                  setImageUrl(e.target.value);
-                  setImagePreview(e.target.value);
+                  const val = e.target.value.trim();
+                  setImageUrl(val);
+                  setImagePreview(val);
                 }} 
                 className="h-9 text-xs" 
                 placeholder="https://..." 
