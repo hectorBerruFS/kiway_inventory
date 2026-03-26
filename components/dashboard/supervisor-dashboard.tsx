@@ -40,11 +40,11 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
   const recentOrders = orders?.slice(0, 5) || [];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Mis Empresas</h1>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Mis Empresas</h1>
         <Link href="/dashboard/orders/new">
-          <Button size="sm" className="gap-1">
+          <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm">
             <Plus className="h-4 w-4" />
             Nuevo Pedido
           </Button>
@@ -54,11 +54,11 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
       {loadingCompanies ? (
         <div className="flex flex-col gap-3">
           {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" />
+            <Skeleton key={i} className="h-32 w-full rounded-lg md:h-40" />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4 lg:gap-6">
           {companies?.map((company) => {
             const budget = Number(company.monthlyBudget);
             const consumed = Number(company.consumedBudget);
@@ -67,21 +67,21 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
 
             return (
               <Card key={company.id}>
-                <CardContent className="p-4">
+                <CardContent className="p-4 md:p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                        <Building2 className="h-4 w-4 text-accent-foreground" />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent md:h-11 md:w-11">
+                        <Building2 className="h-4 w-4 text-accent-foreground md:h-5 md:w-5" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-foreground">{company.name}</p>
+                        <p className="font-semibold text-sm text-foreground md:text-base">{company.name}</p>
                         <p className="text-xs text-muted-foreground">
                           Presupuesto: {formatCurrency(budget)}
                         </p>
                       </div>
                     </div>
                     <Link href={`/dashboard/orders/new?companyId=${company.id}`}>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs h-8">
+                      <Button variant="outline" size="sm" className="gap-1 text-xs h-8 md:h-9 md:px-3 md:text-sm">
                         <Plus className="h-3 w-3" />
                         Pedir
                       </Button>
@@ -106,7 +106,7 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
                   )}
 
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-muted-foreground">Consumido</span>
                       <span className={isOverBudget ? "font-semibold text-destructive" : "text-foreground"}>
                         {formatCurrency(consumed)} / {formatCurrency(budget)}
@@ -131,9 +131,9 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
 
       <div className="mt-2">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-foreground">Pedidos Recientes</h2>
+          <h2 className="text-lg font-bold text-foreground md:text-xl lg:text-2xl">Pedidos Recientes</h2>
           <Link href="/dashboard/orders">
-            <Button variant="ghost" size="sm" className="text-xs">
+            <Button variant="ghost" size="sm" className="text-xs md:text-sm">
               Ver todos
             </Button>
           </Link>
@@ -157,11 +157,11 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
             {recentOrders.map((order) => (
               <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
                 <Card className="hover:bg-accent/50 transition-colors">
-                  <CardContent className="p-3">
+                  <CardContent className="p-3 md:p-5">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="text-sm font-medium text-foreground">{order.companyName}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-medium text-foreground md:text-base">{order.companyName}</p>
+                        <p className="text-xs text-muted-foreground md:text-sm">
                           {new Date(order.createdAt).toLocaleDateString("es-AR")}
                         </p>
                       </div>

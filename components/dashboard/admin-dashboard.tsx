@@ -73,17 +73,17 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 pb-12">
-      <h1 className="text-xl font-bold text-foreground">Panel de Administracion</h1>
+    <div className="flex flex-col gap-6 p-4 pb-12 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
+      <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Panel de Administracion</h1>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 md:gap-5 lg:gap-6">
   {/* Pendientes */}
   <Link href={{ pathname: "/dashboard/orders", query: { status: "sent" } }}>
     <Card className="cursor-pointer hover:shadow-md transition">
-      <CardContent className="flex flex-col items-center p-3">
-        <Clock className="h-5 w-5 text-chart-3 mb-1" />
-        <span className="text-2xl font-bold text-foreground">{stats.pending}</span>
-        <span className="text-xs text-muted-foreground">Pendientes</span>
+      <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
+        <Clock className="h-5 w-5 text-chart-3 mb-1 md:h-7 md:w-7" />
+        <span className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">{stats.pending}</span>
+        <span className="text-xs text-muted-foreground md:text-sm">Pendientes</span>
       </CardContent>
     </Card>
   </Link>
@@ -91,10 +91,10 @@ export function AdminDashboard() {
   {/* Aprobados */}
   <Link href={{ pathname: "/dashboard/orders", query: { status: "approved", month: currentMonth } }}>
     <Card className="cursor-pointer hover:shadow-md transition">
-      <CardContent className="flex flex-col items-center p-3">
-        <CheckCircle2 className="h-5 w-5 text-green-500 mb-1" />
-        <span className="text-2xl font-bold text-foreground">{stats.approved}</span>
-        <span className="text-xs text-muted-foreground">Aprobados</span>
+      <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
+        <CheckCircle2 className="h-5 w-5 text-green-500 mb-1 md:h-7 md:w-7" />
+        <span className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">{stats.approved}</span>
+        <span className="text-xs text-muted-foreground md:text-sm">Aprobados</span>
       </CardContent>
     </Card>
   </Link>
@@ -102,38 +102,38 @@ export function AdminDashboard() {
   {/* Rechazados */}
   <Link href={{ pathname: "/dashboard/orders", query: { status: "rejected", month: currentMonth } }}>
     <Card className="cursor-pointer hover:shadow-md transition">
-      <CardContent className="flex flex-col items-center p-3">
-        <XCircle className="h-5 w-5 text-destructive mb-1" />
-        <span className="text-2xl font-bold text-foreground">{stats.rejected}</span>
-        <span className="text-xs text-muted-foreground">Rechazados</span>
+      <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
+        <XCircle className="h-5 w-5 text-destructive mb-1 md:h-7 md:w-7" />
+        <span className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">{stats.rejected}</span>
+        <span className="text-xs text-muted-foreground md:text-sm">Rechazados</span>
       </CardContent>
     </Card>
   </Link>
 </div>
 
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 md:gap-5 lg:gap-6">
         <Link href="/dashboard/orders">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center p-4">
-              <ShoppingCart className="h-6 w-6 text-primary mb-1" />
-              <span className="text-xs font-medium text-foreground">Pedidos</span>
+            <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
+              <ShoppingCart className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
+              <span className="text-xs font-medium text-foreground md:text-sm lg:text-base">Pedidos</span>
             </CardContent>
           </Card>
         </Link>
         <Link href="/dashboard/receipts">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center p-4">
-              <FileText className="h-6 w-6 text-primary mb-1" />
-              <span className="text-xs font-medium text-foreground">Remitos</span>
+            <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
+              <FileText className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
+              <span className="text-xs font-medium text-foreground md:text-sm lg:text-base">Remitos</span>
             </CardContent>
           </Card>
         </Link>
         <Link href="/dashboard/companies">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center p-4">
-              <Building2 className="h-6 w-6 text-primary mb-1" />
-              <span className="text-xs font-medium text-foreground">Empresas</span>
+            <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
+              <Building2 className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
+              <span className="text-xs font-medium text-foreground md:text-sm lg:text-base">Empresas</span>
             </CardContent>
           </Card>
         </Link>
@@ -141,7 +141,7 @@ export function AdminDashboard() {
 
           {/* Pedidos Pendientes de Aprobacion Section */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold text-foreground">Pedidos Pendientes de Aprobacion</h2>
+        <h2 className="text-lg font-bold text-foreground md:text-xl lg:text-2xl">Pedidos Pendientes de Aprobacion</h2>
 
         {ordersLoading ? (
           <div className="flex flex-col gap-2">
@@ -161,9 +161,9 @@ export function AdminDashboard() {
             {pendingOrders.map((order) => (
               <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
                 <Card className="hover:bg-accent/50 transition-colors">
-                  <CardContent className="p-3">
+                  <CardContent className="p-3 md:p-4 lg:p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-semibold text-foreground">{order.companyName}</p>
+                      <p className="text-sm font-semibold text-foreground md:text-base">{order.companyName}</p>
                       <StatusBadge status={order.status} />
                     </div>
                     <div className="flex items-center justify-between">
@@ -171,7 +171,7 @@ export function AdminDashboard() {
                         Por: {order.supervisorName} -{" "}
                         {new Date(order.createdAt).toLocaleDateString("es-AR")}
                       </p>
-                      <span className="text-sm font-bold text-foreground">
+                      <span className="text-sm font-bold text-foreground md:text-base">
                         {formatCurrency(Number(order.total))}
                       </span>
                     </div>
@@ -205,7 +205,7 @@ export function AdminDashboard() {
 
       {/* Autorizaciones Extra Section */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 md:text-xl lg:text-2xl">
           <AlertTriangle className="h-5 w-5 text-amber-500" />
           Solicitudes de Pedido Extra
         </h2>
@@ -225,11 +225,11 @@ export function AdminDashboard() {
           <div className="flex flex-col gap-2">
             {extraAuths.map((auth) => (
               <Card key={auth.id} className="border-amber-200 bg-amber-50/30">
-                <CardContent className="p-3">
+                <CardContent className="p-3 md:p-4 lg:p-5">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="text-sm font-bold text-foreground">{auth.companyName}</p>
-                      <p className="text-xs text-muted-foreground">Periodo: {auth.month}</p>
+                      <p className="text-sm font-bold text-foreground md:text-base">{auth.companyName}</p>
+                      <p className="text-xs text-muted-foreground md:text-sm">Periodo: {auth.month}</p>
                     </div>
                   </div>
                   <div className="bg-white/50 p-2 rounded border border-amber-100 mb-3">
@@ -239,7 +239,7 @@ export function AdminDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-10 text-destructive border-destructive/20 hover:bg-destructive/5"
+                      className="flex-1 h-10 text-destructive border-destructive/20 hover:bg-destructive/5 md:h-11 md:text-sm"
                       onClick={() => handleAction(auth.id, false)}
                     >
                       <XCircle className="h-4 w-4 mr-2" />
@@ -248,7 +248,7 @@ export function AdminDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-10 text-green-700 border-green-200 bg-green-50 hover:bg-green-100"
+                      className="flex-1 h-10 text-green-700 border-green-200 bg-green-50 hover:bg-green-100 md:h-11 md:text-sm"
                       onClick={() => handleAction(auth.id, true)}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
