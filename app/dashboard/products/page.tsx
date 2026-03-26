@@ -74,15 +74,15 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Productos</h1>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Productos</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1" onClick={() => setBulkDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm" onClick={() => setBulkDialogOpen(true)}>
             <FileJson className="h-4 w-4" />
             Actualizar Precios
           </Button>
-          <Button size="sm" className="gap-1" onClick={openNew}>
+          <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm" onClick={openNew}>
             <Plus className="h-4 w-4" />
             Nuevo
           </Button>
@@ -95,7 +95,7 @@ export default function ProductsPage() {
           placeholder="Buscar productos..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 h-11"
+          className="pl-9 h-11 md:h-12 md:text-base"
         />
       </div>
 
@@ -108,8 +108,8 @@ export default function ProductsPage() {
       ) : !filtered || filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-            <Package className="h-12 w-12 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No hay productos</p>
+            <Package className="h-12 w-12 text-muted-foreground mb-3 md:h-16 md:w-16" />
+            <p className="text-sm text-muted-foreground md:text-base">No hay productos</p>
           </CardContent>
         </Card>
       ) : (
@@ -118,7 +118,7 @@ export default function ProductsPage() {
             <AccordionItem key={category} value={category} className="border-b border-muted">
               <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold uppercase tracking-wide text-foreground">
+                  <span className="text-sm font-bold uppercase tracking-wide text-foreground md:text-base">
                     {category}
                   </span>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -132,9 +132,9 @@ export default function ProductsPage() {
                     ?.filter((p) => p.category === category)
                     .map((product) => (
                       <Card key={product.id} className="border-none bg-muted/30">
-                        <CardContent className="flex items-center justify-between p-3">
+                        <CardContent className="flex items-center justify-between p-3 md:p-4 lg:p-5">
                           <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border">
+                            <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border md:h-16 md:w-16">
                               {product.imageUrl ? (
                                 <Image 
                                   src={normalizeProductImageUrl(product.imageUrl)} 
@@ -148,8 +148,8 @@ export default function ProductsPage() {
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-foreground">{product.name}</p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-sm font-medium text-foreground md:text-base">{product.name}</p>
+                              <p className="text-xs text-muted-foreground md:text-sm">
                                 {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""} - {formatCurrency(Number(product.price))}
                               </p>
                             </div>
@@ -329,7 +329,7 @@ function ProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm md:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {product ? "Editar Producto" : "Nuevo Producto"}
@@ -389,7 +389,7 @@ function ProductDialog({
               placeholder="Ej: 1500.50"
             />
           </div>
-          <Button type="submit" disabled={loading} className="h-11">
+          <Button type="submit" disabled={loading} className="h-11 md:h-14 md:text-base">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : product ? "Guardar Cambios" : "Crear Producto"}
           </Button>
         </form>
