@@ -278,8 +278,8 @@ export default function EditOrderContent({
             </div>
             {cartTotal > 0 && (
               <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-border">
-                <span className="text-muted-foreground">Porcentaje del presupuesto:</span>
-                <span className="font-semibold text-foreground">{((cartTotal / budget) * 100).toFixed(1)}%</span>
+                <span className="text-muted-foreground">Gasto actual: {cartTotal}</span>
+              <span className="font-semibold text-foreground">Porcentaje del presupuesto: {budget > 0 ? ((cartTotal / budget) * 100).toFixed(1) : "0.0"}%</span>
               </div>
             )}
             {isOverBudget && (
