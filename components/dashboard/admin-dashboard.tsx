@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart, Building2, Clock, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react";
+import { ShoppingCart, Settings2, Clock, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react";
 import { StatusBadge } from "./supervisor-dashboard";
 import { formatCurrency } from "@/lib/format";
 
@@ -132,8 +132,8 @@ export function AdminDashboard() {
         <Link href="/dashboard/companies">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
-              <Building2 className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
-              <span className="text-xs font-medium text-foreground md:text-sm lg:text-base">Empresas</span>
+              <Settings2 className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
+              <span className="text-xs font-medium text-foreground md:text-sm lg:text-base">Ajustes</span>
             </CardContent>
           </Card>
         </Link>

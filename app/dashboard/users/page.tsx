@@ -46,10 +46,10 @@ export default function UsersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Usuarios</h1>
-        <Button size="sm" className="gap-1" onClick={() => setDialogOpen(true)}>
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Usuarios</h1>
+        <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm" onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4" />
           Nuevo
         </Button>
@@ -63,23 +63,23 @@ export default function UsersPage() {
         </div>
       ) : !users || users.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No hay usuarios</p>
+          <CardContent className="flex flex-col items-center justify-center p-10 text-center md:p-16">
+            <Users className="h-12 w-12 text-muted-foreground mb-3 md:h-16 md:w-16" />
+            <p className="text-sm text-muted-foreground md:text-base">No hay usuarios</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 md:grid md:grid-cols-2 md:gap-4 lg:gap-6">
           {users.map((user) => (
             <Card key={user.id}>
-              <CardContent className="flex items-center justify-between p-3">
+              <CardContent className="flex items-center justify-between p-3 md:p-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium text-foreground md:text-base">{user.name}</p>
+                  <p className="text-xs text-muted-foreground md:text-sm">{user.email}</p>
                 </div>
                 <Badge
                   variant="secondary"
-                  className={`text-xs ${roleBadgeStyles[user.role] || ""}`}
+                  className={`text-xs md:text-sm ${roleBadgeStyles[user.role] || ""}`}
                 >
                   {ROLE_LABELS[user.role] || "Desconocido"}
                 </Badge>
@@ -139,7 +139,7 @@ function UserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm md:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-foreground">Nuevo Usuario</DialogTitle>
         </DialogHeader>
@@ -176,7 +176,7 @@ function UserDialog({
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" disabled={loading} className="h-11">
+          <Button type="submit" disabled={loading} className="h-11 md:h-12 md:text-base">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear Usuario"}
           </Button>
         </form>

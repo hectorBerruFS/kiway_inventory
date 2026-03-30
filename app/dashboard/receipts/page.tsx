@@ -43,10 +43,10 @@ export default function ReceiptsPage() {
   const { data: orders, isLoading } = useSWR(url, fetcher);
 
   return (
-    <div className="flex flex-col gap-4 p-4 pb-12">
+    <div className="flex flex-col gap-4 p-4 pb-12 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <ReceiptText className="h-6 w-6 text-primary" />
+        <h1 className="text-xl font-bold text-foreground flex items-center gap-2 md:text-2xl lg:text-3xl">
+          <ReceiptText className="h-6 w-6 text-primary md:h-8 md:w-8" />
           Histórico de Remitos
         </h1>
       </div>
@@ -61,7 +61,7 @@ export default function ReceiptsPage() {
                 variant={statusFilter === f.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(f.value)}
-                className="shrink-0 text-xs h-8"
+                className="shrink-0 text-xs h-8 md:text-sm md:h-10 md:px-4"
               >
                 {f.label}
               </Button>
@@ -74,7 +74,7 @@ export default function ReceiptsPage() {
               type="month"
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="h-9 text-xs w-[180px]"
+              className="h-9 text-xs w-[180px] md:h-11 md:text-sm md:w-[220px]"
             />
             {monthFilter && (
               <Button
@@ -109,7 +109,7 @@ export default function ReceiptsPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {/* Cabecera de "tabla" para desktop (opcional, manteniendo mobile first) */}
-            <div className="hidden md:grid md:grid-cols-7 gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="hidden md:grid md:grid-cols-7 gap-4 px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 rounded-t-lg border-x border-t border-border">
               <div className="col-span-1">Fecha</div>
               <div className="col-span-2">Empresa</div>
               <div className="col-span-1">Estado</div>
@@ -123,10 +123,10 @@ export default function ReceiptsPage() {
                 <Card className="hover:bg-accent/30 transition-colors overflow-hidden border-l-4 border-l-primary/20">
                   <CardContent className="p-0">
                     {/* Desktop Layout (oculto en móvil) */}
-                    <div className="hidden md:grid md:grid-cols-7 gap-4 items-center p-3">
+                    <div className="hidden md:grid md:grid-cols-7 gap-4 items-center p-4">
                       <div className="col-span-1 text-xs font-medium">{formatDate(order.createdAt)}</div>
                       <div className="col-span-2">
-                        <p className="text-sm font-bold text-foreground truncate">{order.companyName}</p>
+                        <p className="text-sm font-bold text-foreground truncate md:text-base leading-tight">{order.companyName}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{order.supervisorName}</p>
                       </div>
                       <div className="col-span-1">

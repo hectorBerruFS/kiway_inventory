@@ -354,8 +354,8 @@ export default function NewOrderContent() {
               </span>
             </div>
             <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-border">
-              <span className="text-muted-foreground">Gasto actual:</span>
-              <span className="font-semibold text-foreground">{budget > 0 ? ((cartTotal / budget) * 100).toFixed(1) : "0.0"}%</span>
+              <span className="text-muted-foreground">Gasto actual: {cartTotal}</span>
+              <span className="font-semibold text-foreground">Porcentaje del presupuesto: {budget > 0 ? ((cartTotal / budget) * 100).toFixed(1) : "0.0"}%</span>
             </div>
             {projectedBudget?.isCommittedExceeded && (
               <div className="flex items-start gap-2 mt-3 p-2 text-xs text-amber-600 bg-amber-50 rounded-md border border-amber-200">
