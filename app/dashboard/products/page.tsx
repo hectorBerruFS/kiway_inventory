@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Plus, Search, Pencil, Trash2, Package, Loader2, FileJson, Upload } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Package, Loader2, FileJson, Upload, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import Papa from "papaparse";
@@ -37,7 +37,7 @@ interface Product {
   category: string;
   price: string;
   imageUrl: string | null;
-  isActive: boolean;
+  isActive: boolean | null;
 }
 
 export default function ProductsPage() {
@@ -46,6 +46,7 @@ export default function ProductsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [exportingProducts, setExportingProducts] = useState(false);
 
   const filtered = products?.filter(
     (p) =>
@@ -66,6 +67,46 @@ export default function ProductsPage() {
     setDialogOpen(true);
   }
 
+  async function handleExportProducts() {
+    setExportingProducts(true);
+    try {
+      const response = await fetch("/api/products", { cache: "no-store" });
+      if (!response.ok) throw new Error("No se pudieron cargar los productos");
+
+      const allProducts: Product[] = await response.json();
+      const activeProducts = allProducts.filter((product) => product.isActive === true);
+      if (activeProducts.length === 0) {
+        toast.error("No hay productos activos para exportar");
+        return;
+      }
+
+      const csv = Papa.unparse({
+        fields: ["SKU", "Nombre", "Marca", "Precio"],
+        data: activeProducts.map(({ sku, name, brand, price }) => [
+          sku ?? "",
+          name,
+          brand,
+          price,
+        ]),
+      });
+      const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const date = new Date();
+      const dateLabel = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      link.href = url;
+      link.download = `productos-${dateLabel}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch {
+      toast.error("No se pudieron exportar los productos");
+    } finally {
+      setExportingProducts(false);
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Desactivar este producto?")) return;
     await fetch(`/api/products/${id}`, { method: "DELETE" });
@@ -77,7 +118,17 @@ export default function ProductsPage() {
     <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Productos</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 gap-1 md:px-4 md:text-sm"
+            onClick={handleExportProducts}
+            disabled={exportingProducts}
+          >
+            {exportingProducts ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {exportingProducts ? "Exportando..." : "Exportar CSV"}
+          </Button>
           <Button variant="outline" size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm" onClick={() => setBulkDialogOpen(true)}>
             <FileJson className="h-4 w-4" />
             Actualizar Precios
