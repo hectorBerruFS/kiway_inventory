@@ -31,6 +31,7 @@ export async function PUT(
       brand: body.brand,
       category: body.category,
       price: body.price,
+      stock: body.stock,
       imageUrl: body.imageUrl,
     });
 
@@ -60,4 +61,3 @@ export async function DELETE(
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-

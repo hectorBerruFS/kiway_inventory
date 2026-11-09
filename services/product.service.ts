@@ -13,6 +13,7 @@ export interface ProductInput {
   brand: string;
   category: string;
   price: string | number;
+  stock?: number;
   imageUrl?: string;
 }
 
@@ -20,8 +21,14 @@ export async function createProduct(input: ProductInput) {
   /**
    * Crea un nuevo producto activo
    */
-  if (!input.name || !input.brand || !input.category || !input.price) {
+  if (!input.name || !input.brand || !input.category || input.price === undefined || input.price === "") {
     throw new Error("Datos incompletos para crear producto");
+  }
+  if (!Number.isFinite(Number(input.price)) || Number(input.price) < 0) {
+    throw new Error("El precio debe ser un número mayor o igual a cero");
+  }
+  if (input.stock !== undefined && (!Number.isInteger(input.stock) || input.stock < 0)) {
+    throw new Error("El stock debe ser un entero mayor o igual a cero");
   }
 
   const [product] = await db
@@ -32,6 +39,7 @@ export async function createProduct(input: ProductInput) {
       brand: input.brand,
       category: input.category,
       price: String(input.price),
+      stock: input.stock ?? 0,
       imageUrl: input.imageUrl?.trim() || null,
     })
     .returning();
@@ -46,13 +54,20 @@ export async function updateProduct(productId: string, input: Partial<ProductInp
   if (!productId) {
     throw new Error("ID de producto requerido");
   }
+  if (input.price !== undefined && (!Number.isFinite(Number(input.price)) || Number(input.price) < 0)) {
+    throw new Error("El precio debe ser un número mayor o igual a cero");
+  }
+  if (input.stock !== undefined && (!Number.isInteger(input.stock) || input.stock < 0)) {
+    throw new Error("El stock debe ser un entero mayor o igual a cero");
+  }
 
   const updateData: any = {};
   if (input.name) updateData.name = input.name;
   if (typeof input.sku !== "undefined") updateData.sku = input.sku || null;
   if (input.brand) updateData.brand = input.brand;
   if (input.category) updateData.category = input.category;
-  if (input.price) updateData.price = String(input.price);
+  if (typeof input.price !== "undefined") updateData.price = String(input.price);
+  if (typeof input.stock !== "undefined") updateData.stock = input.stock;
   if (typeof input.imageUrl !== "undefined") updateData.imageUrl = input.imageUrl?.trim() || null;
 
   if (Object.keys(updateData).length === 0) {
@@ -105,6 +120,10 @@ export async function listActiveProducts() {
     .orderBy(products.category, products.name);
 
   return result;
+}
+
+export async function listProducts() {
+  return db.select().from(products).orderBy(products.category, products.name);
 }
 
 export async function getProductById(productId: string) {

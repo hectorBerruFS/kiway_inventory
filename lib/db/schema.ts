@@ -40,6 +40,7 @@ export const products = pgTable("products", {
   brand: varchar("brand", { length: 255 }).notNull(),
   category: varchar("category", { length: 255 }).notNull(),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  stock: integer("stock").notNull().default(0),
   imageUrl: varchar("image_url", { length: 500 }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),

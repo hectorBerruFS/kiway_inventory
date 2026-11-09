@@ -129,7 +129,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link href="/dashboard/companies">
+        <Link href="/dashboard/settings">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
               <Settings2 className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />

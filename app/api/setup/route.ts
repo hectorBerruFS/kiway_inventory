@@ -36,14 +36,19 @@ export async function POST() {
       CREATE TABLE IF NOT EXISTS products (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        sku VARCHAR(100),
         brand VARCHAR(255) NOT NULL,
         category VARCHAR(255) NOT NULL,
         price NUMERIC(10, 2) NOT NULL,
+        stock INTEGER NOT NULL DEFAULT 0,
         image_url VARCHAR(500),
         is_active BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `;
+
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100)`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS companies (

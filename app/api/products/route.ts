@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { listActiveProducts, createProduct } from "@/services/product.service";
+import { listActiveProducts, listProducts, createProduct } from "@/services/product.service";
 import { ROLES } from "@/lib/db/schema";
 
 export async function GET(req: NextRequest) {
@@ -8,6 +8,13 @@ export async function GET(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   try {
+    if (new URL(req.url).searchParams.get("includeInactive") === "true") {
+      if (session.user.role < ROLES.ADMIN) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+      return NextResponse.json(await listProducts());
+    }
+
     const result = await listActiveProducts();
     return NextResponse.json(result);
   } catch (error: any) {
@@ -32,6 +39,7 @@ export async function POST(req: NextRequest) {
       brand: body.brand,
       category: body.category,
       price: body.price,
+      stock: body.stock,
       imageUrl: body.imageUrl,
     });
     return NextResponse.json(product);
@@ -39,4 +47,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-

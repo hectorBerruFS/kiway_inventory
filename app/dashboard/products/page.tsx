@@ -36,6 +36,7 @@ interface Product {
   brand: string;
   category: string;
   price: string;
+  stock: number;
   imageUrl: string | null;
   isActive: boolean | null;
 }
@@ -203,6 +204,7 @@ export default function ProductsPage() {
                               <p className="text-xs text-muted-foreground md:text-sm">
                                 {product.brand}{product.sku ? ` | SKU: ${product.sku}` : ""} - {formatCurrency(Number(product.price))}
                               </p>
+                              <p className="text-xs text-muted-foreground md:text-sm">Disponible: {product.stock}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
