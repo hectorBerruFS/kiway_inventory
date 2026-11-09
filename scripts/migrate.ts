@@ -21,9 +21,12 @@ async function migrate() {
       email VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       role INTEGER NOT NULL DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
       created_at TIMESTAMP DEFAULT NOW() NOT NULL
     )
   `;
+
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS products (

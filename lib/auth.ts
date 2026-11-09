@@ -21,10 +21,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await db
           .select()
           .from(users)
-          .where(eq(users.email, credentials.email as string))
+          .where(eq(users.email, String(credentials.email).trim().toLowerCase()))
           .limit(1);
 
-        if (user.length === 0) return null;
+        if (user.length === 0 || !user[0].isActive) return null;
 
         const isValid = await compare(
           credentials.password as string,
@@ -48,6 +48,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = (user as { role: number }).role;
       }
+
+      if (token.id) {
+        const [currentUser] = await db
+          .select({ role: users.role, isActive: users.isActive })
+          .from(users)
+          .where(eq(users.id, token.id))
+          .limit(1);
+
+        if (!currentUser?.isActive) return null;
+        token.role = currentUser.role;
+      }
+
       return token;
     },
     async session({ session, token }) {
