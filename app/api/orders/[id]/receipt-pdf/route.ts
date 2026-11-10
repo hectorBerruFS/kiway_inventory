@@ -4,9 +4,10 @@ import { getOrderWithItems } from "@/services/order.service";
 import { renderRemitoPdf } from "@/lib/pdf/remito-pdf";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -26,15 +27,17 @@ export async function GET(
       );
     }
 
-    const pdf = await renderRemitoPdf(order);
+    const includePrices = req.nextUrl.searchParams.get("includePrices") !== "false";
+    const pdf = await renderRemitoPdf(order, includePrices);
     const remitoNumber = order.remitoNumber
       ? String(order.remitoNumber).padStart(6, "0")
       : order.id.slice(0, 8).toUpperCase();
+    const priceSuffix = includePrices ? "" : "-sin-valores";
 
     return new NextResponse(pdf, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="remito-${remitoNumber}.pdf"`,
+        "Content-Disposition": `inline; filename="remito-${remitoNumber}${priceSuffix}.pdf"`,
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
         Pragma: "no-cache",
         Expires: "0",

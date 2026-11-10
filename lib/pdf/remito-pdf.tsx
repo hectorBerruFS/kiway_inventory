@@ -37,7 +37,10 @@ function formatDate(value: Date | string) {
   }).format(new Date(value));
 }
 
-export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
+export async function renderRemitoPdf(
+  order: OrderForPdf,
+  includePrices = true
+): Promise<Uint8Array> {
   const pkg = "@react-pdf/renderer";
   const reactPdf = (await import(pkg)) as any;
 
@@ -106,10 +109,10 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
       minHeight: 26,
     },
     cell: { paddingVertical: 6, paddingHorizontal: 6, fontSize: 9 },
-    c1: { width: "36%" },
-    c2: { width: "18%" },
+    c1: { width: includePrices ? "36%" : "50%" },
+    c2: { width: includePrices ? "18%" : "25%" },
     c3: { width: "16%", textAlign: "right" },
-    c4: { width: "12%", textAlign: "center" },
+    c4: { width: includePrices ? "12%" : "25%", textAlign: "center" },
     c5: { width: "18%", textAlign: "right" },
     bodyRow: { borderBottomWidth: 0.6, borderBottomColor: "#D1D5DB", minHeight: 24 },
     footerRow: {
@@ -144,23 +147,25 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
     : order.id.slice(0, 8).toUpperCase();
 
   const rows = order.items.map((item) => {
-    const subtotal = Number(item.priceSnapshot) * item.quantity;
-
     return createElement(
       View,
       { style: [styles.row, styles.bodyRow], key: item.id, wrap: false },
       createElement(Text, { style: [styles.cell, styles.c1] }, item.nameSnapshot),
       createElement(Text, { style: [styles.cell, styles.c2] }, item.brandSnapshot),
-      createElement(Text, { style: [styles.cell, styles.c3] }, formatCurrency(Number(item.priceSnapshot))),
+      includePrices && createElement(Text, { style: [styles.cell, styles.c3] }, formatCurrency(Number(item.priceSnapshot))),
       createElement(Text, { style: [styles.cell, styles.c4] }, String(item.quantity)),
-      createElement(Text, { style: [styles.cell, styles.c5] }, formatCurrency(subtotal))
+      includePrices && createElement(
+        Text,
+        { style: [styles.cell, styles.c5] },
+        formatCurrency(Number(item.priceSnapshot) * item.quantity)
+      )
     );
   });
 
   const document = createElement(
     Document,
     {
-      title: `Remito ${remitoNumber}`,
+      title: `Remito ${remitoNumber}${includePrices ? "" : " sin valores"}`,
       author: "Kiway",
       subject: "Remito interno",
       language: "es-AR",
@@ -211,7 +216,7 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
           { style: { alignItems: "flex-end" } },
           createElement(Text, { style: styles.detailLabel }, "Solicitado por"),
           createElement(Text, { style: styles.detailValue }, order.supervisorName ?? "-"),
-          order.budgetAssessment && createElement(
+          includePrices && order.budgetAssessment && createElement(
             View,
             { style: styles.budgetBox },
             createElement(Text, { style: styles.detailLabel }, `Presupuesto (${order.budgetAssessment.month})`),
@@ -227,12 +232,12 @@ export async function renderRemitoPdf(order: OrderForPdf): Promise<Uint8Array> {
           { style: [styles.row, styles.headerRow] },
           createElement(Text, { style: [styles.cell, styles.c1] }, "Producto"),
           createElement(Text, { style: [styles.cell, styles.c2] }, "Marca"),
-          createElement(Text, { style: [styles.cell, styles.c3] }, "Precio unit."),
+          includePrices && createElement(Text, { style: [styles.cell, styles.c3] }, "Precio unit."),
           createElement(Text, { style: [styles.cell, styles.c4] }, "Cant."),
-          createElement(Text, { style: [styles.cell, styles.c5] }, "Subtotal")
+          includePrices && createElement(Text, { style: [styles.cell, styles.c5] }, "Subtotal")
         ),
         ...rows,
-        createElement(
+        includePrices && createElement(
           View,
           { style: [styles.row, styles.footerRow] },
           createElement(Text, { style: [styles.cell, styles.c1, { width: "82%", textAlign: "right" }] }, "TOTAL"),

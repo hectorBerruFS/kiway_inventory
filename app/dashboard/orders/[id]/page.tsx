@@ -261,12 +261,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           )}
 
           {order.status === "approved" && (
-            <Button variant="outline" className="h-12 gap-2" asChild>
-              <a href={`/api/orders/${id}/receipt-pdf`} target="_blank" rel="noopener noreferrer">
-                <Printer className="h-5 w-5" />
-                Imprimir Remito (PDF A4)
-              </a>
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button variant="outline" className="h-12 gap-2" asChild>
+                <a href={`/api/orders/${id}/receipt-pdf`} target="_blank" rel="noopener noreferrer">
+                  <Printer className="h-5 w-5" />
+                  Remito con valores (PDF A4)
+                </a>
+              </Button>
+              <Button variant="outline" className="h-12 gap-2" asChild>
+                <a
+                  href={`/api/orders/${id}/receipt-pdf?includePrices=false`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Printer className="h-5 w-5" />
+                  Remito sin valores (PDF A4)
+                </a>
+              </Button>
+            </div>
           )}
         </div>
       </div>
