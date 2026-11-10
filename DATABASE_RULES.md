@@ -2,61 +2,59 @@
 
 Este documento detalla la estructura completa de la base de datos (PostgreSQL + Drizzle) y las reglas de integridad que rigen el sistema.
 
-### 1. Entidades del Sistema
+### 1. Entidades
 
-#### `users` (Usuarios)
-*   **id:** uuid (PK, defaultRandom)
-*   **name:** varchar(255)
-*   **email:** varchar(255) (Unique)
-*   **password:** varchar(255) (Bcrypt hash)
-*   **role:** integer (0: Staff, 1: Supervisor, 2: Admin, 3: Superadmin)
-*   **createdAt:** timestamp
+#### `users`
+* `id`: UUID, clave primaria.
+* `name`, `email`, `password`: datos requeridos; el email es único y la contraseña se almacena como hash.
+* `role`: entero con valores de rol 0–3; predeterminado 0.
+* `isActive`: booleano, predeterminado `true`; permite desactivar usuarios.
+* `createdAt`: timestamp.
 
-#### `products` (Catálogo)
-*   **id:** uuid (PK)
-*   **name:** varchar(255)
-*   **brand:** varchar(255)
-*   **category:** varchar(255)
-*   **price:** numeric(10, 2)
-*   **isActive:** boolean (Soft delete)
-*   **imageUrl:** varchar(500)
+#### `products`
+* `id`: UUID, clave primaria.
+* `name`, `brand`, `category`: texto requerido.
+* `sku`: texto opcional, usado para identificar productos en cargas CSV.
+* `price`: `numeric(10,2)`; `stock`: entero con valor predeterminado 0.
+* `imageUrl`: texto opcional; `isActive`: booleano, predeterminado `true`.
+* `createdAt`: timestamp.
 
-#### `companies` (Empresas/Centros)
-*   **id:** uuid (PK)
-*   **name:** varchar(255)
-*   **monthlyBudget:** numeric(10, 2)
-*   **supervisorId:** uuid (FK -> users.id)
+#### `companies`
+* `id`: UUID, clave primaria; `name`: texto requerido.
+* `monthlyBudget`: `numeric(10,2)`.
+* `supervisorId`: clave foránea requerida a `users.id`.
+* `createdAt`: timestamp.
 
-#### `orders` (Pedidos) — **[DESTACADO: NUEVOS CAMPOS]**
-*   **id:** uuid (PK)
-*   **companyId:** uuid (FK)
-*   **supervisorId:** uuid (FK)
-*   **status:** enum ('draft', 'sent', 'approved', 'rejected', 'cancelled')
-*   **total:** numeric(10, 2)
-*   **intendedMonth:** varchar(7) — **[NUEVO]** Formato `YYYY-MM`. Determina el mes al que aplica el presupuesto.
-*   **createdAt:** timestamp
+#### `orders`
+* `id`: UUID, clave primaria.
+* `companyId` y `supervisorId`: claves foráneas requeridas.
+* `status`: enum `draft`, `sent`, `approved`, `rejected` o `cancelled`; predeterminado `draft`.
+* `total`: `numeric(10,2)`, predeterminado 0.
+* `intendedMonth`: texto de hasta 7 caracteres, normalmente `YYYY-MM`; admite `NULL` para registros anteriores o sin mes explícito.
+* `createdAt`: timestamp.
 
-#### `order_items` (Items de Pedido) — **[DESTACADO: SNAPSHOTS]**
-*   **id:** uuid (PK)
-*   **orderId:** uuid (FK)
-*   **productId:** uuid (FK)
-*   **quantity:** integer
-*   **nameSnapshot:** varchar(255) — **[COMPLETADO]** Nombre al momento de la orden.
-*   **brandSnapshot:** varchar(255) — **[COMPLETADO]** Marca al momento de la orden.
-*   **priceSnapshot:** numeric(10, 2) — **[COMPLETADO]** Precio al momento de la orden.
+#### `order_items`
+* `id`: UUID, clave primaria; `orderId`: clave foránea con borrado en cascada.
+* `productId`: clave foránea a `products.id`.
+* `quantity`: entero, predeterminado 1.
+* `nameSnapshot`, `brandSnapshot`: texto requerido; `priceSnapshot`: `numeric(10,2)` requerido.
 
-#### `extra_order_authorizations` — **[NUEVA ENTIDAD]**
-*   **id:** uuid (PK)
-*   **companyId:** uuid (FK)
-*   **supervisorId:** uuid (FK) (Solicitante)
-*   **adminId:** uuid (FK) (Autorizador)
-*   **month:** varchar(7) (Mes de la excepción)
-*   **reason:** varchar(500) (Justificación)
-*   **status:** enum ('pending', 'authorized', 'used', 'rejected')
-*   **createdAt:** timestamp
+#### `remitos`
+* `id`: UUID, clave primaria.
+* `orderId`: clave foránea única a `orders.id`, con borrado restringido.
+* `internalNumber`: entero generado por identidad; `createdAt`: timestamp.
+* Se crea el registro al aprobar el pedido y provee el número interno del remito.
 
-### 2. Reglas de Integridad Críticas
-1.  **Snapshots:** Es OBLIGATORIO guardar el estado del producto (`name`, `brand`, `price`) en los campos `Snapshot` al momento de aprobar o enviar un pedido. No se debe depender de la tabla `products` para facturación o remitos históricos.
-2.  **Unicidad de Pedido Mensual:** El sistema valida que no exista más de un pedido con estado `sent` o `approved` para la misma `companyId` y el mismo `intendedMonth` sin una autorización extra 'authorized'.
-3.  **Soft Delete:** Los productos nunca se eliminan físicamente; se usa `isActive: false` para evitar romper la integridad referencial de pedidos antiguos.
-4.  **Consumo de Autorización:** Cuando se envía un pedido usando una autorización extra, su estado debe cambiar a `used`.
+#### `extra_order_authorizations`
+* `id`: UUID, clave primaria; `companyId` y `supervisorId`: claves foráneas requeridas.
+* `adminId`: clave foránea nullable a `users.id`.
+* `month`: texto requerido de formato `YYYY-MM`; `reason`: texto requerido de hasta 500 caracteres.
+* `status`: enum `pending`, `authorized`, `used` o `rejected`; predeterminado `pending`.
+* `createdAt`: timestamp.
+
+### 2. Integridad y reglas de negocio
+1. Los snapshots del pedido se guardan al crear o editar sus ítems y se refrescan al aprobar. Remitos y vistas históricas deben usar esos campos.
+2. El límite mensual de pedidos `sent`/`approved` se comprueba desde el servicio de pedidos para el flujo de supervisores; no hay una restricción única equivalente declarada en el esquema.
+3. Las autorizaciones extra relacionan empresa, supervisor y mes. El flujo previsto es `pending` → `authorized` o `rejected`; al usarla para un pedido, pasa a `used`.
+4. Los productos y usuarios se desactivan en vez de eliminarse físicamente, para preservar referencias e historial.
+5. El remito está asociado a un único pedido. Su clave foránea usa `ON DELETE RESTRICT` para proteger el documento histórico.

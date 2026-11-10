@@ -1,36 +1,43 @@
-# ARCHITECTURE — Estructura & Estabilidad
+# ARCHITECTURE — Estructura y Flujos del Sistema
 
-Este documento describe la arquitectura técnica del proyecto, centrada en Next.js App Router y la estabilidad de sesiones en Netlify.
+Aplicación Next.js App Router con PostgreSQL/Drizzle, Auth.js v5 y despliegue configurado para Netlify.
 
-### 1. Estructura de Carpetas
+### 1. Estructura
 ```text
 kiway_inventory/
-├── app/                  # Rutas (Route Groups) y API Routes
-│   ├── (auth)/           # Rutas públicas de autenticación (login)
-│   ├── (app)/            # Rutas protegidas de la aplicación
-│   └── api/              # Endpoints de API y Auth.js handlers
-├── components/           # UI Components (Mobile-First)
-├── lib/                  # Librerías y configuraciones core
-│   ├── auth.ts           # Configuración de Auth.js v5
-│   ├── db/               # Esquema e índice de Drizzle
-│   └── auth-helpers.ts   # Helpers de protección (requireAuth, requireAdmin)
-├── services/             # Lógica de negocio (Server-Side)
-│   ├── order.service.ts  # Gestión de pedidos y snapshots
-│   └── ...               # Otros servicios (budget, company, etc.)
-├── proxy.ts              # Middleware oficial (Protección y Cache-Control)
-└── netlify.toml          # Configuración de deploy y headers globales
+├── app/
+│   ├── api/                 # Route Handlers: auth, pedidos, productos, empresas, usuarios
+│   ├── dashboard/           # Vistas protegidas de pedidos, catálogo, remitos y ajustes
+│   ├── login/               # Inicio de sesión
+│   └── setup/               # Configuración inicial
+├── components/              # Componentes de interfaz, incluidos componentes del dashboard
+├── hooks/                   # Hooks de cliente
+├── lib/
+│   ├── db/                  # Conexión y esquema Drizzle
+│   └── pdf/                 # Generación de remitos PDF
+├── services/                # Reglas de negocio y acceso funcional a datos
+├── scripts/                 # Scripts de mantenimiento/migración
+├── proxy.ts                 # Protección de rutas y headers de caché
+└── netlify.toml             # Build, publicación y headers de despliegue
 ```
 
-### 2. Capa de Estabilidad (Netlify)
-Para garantizar que las sesiones no se queden "pegadas" o sean cacheadas incorrectamente por el CDN de Netlify:
-1.  **Middleware (`proxy.ts`):** Inyecta headers `no-store` en todas las rutas protegidas. Además, **excluye explícitamente `/api/auth`** del `matcher` y de la protección obligatoria para permitir que el logout y los callbacks de Auth.js funcionen correctamente.
-2.  **Global Headers:** El archivo `netlify.toml` refuerza estas reglas para rutas críticas (`/api/auth/*`, `/login`, `/dashboard`).
-3.  **Server Components:** Se utilizan `requireAuth()` y `requireAdmin()` en el lado del servidor para validaciones robustas.
+### 2. Autenticación y protección
+* `lib/auth.ts` configura Auth.js con proveedor Credentials, comparación de contraseñas bcrypt y estrategia de sesión JWT.
+* El callback JWT vuelve a consultar el usuario: actualiza el rol de la sesión y la invalida si la cuenta está inactiva.
+* `proxy.ts` protege las rutas no públicas y redirige usuarios no autenticados a `/login`; `lib/auth-helpers.ts` aplica guardas de sesión y rol en el servidor.
+* `/api/auth/*` está excluido del matcher del proxy para que Auth.js administre callback y cierre de sesión. `netlify.toml` define sus headers de no-cache por separado.
+* Las respuestas autenticadas y las rutas críticas tienen headers `no-store`; conservarlos para evitar servir datos de sesión desde caché.
 
-### 3. Flujo de Protección de Rutas
-*   **Públicas:** `/login` (redirecciona a dashboard si ya hay sesión).
-*   **Protegidas:** Todo bajo `/dashboard` o dentro del grupo `(app)`.
-*   **Validación:** El middleware en `proxy.ts` detecta el token de `authjs` y redirige al login si no existe, previniendo visualizaciones de datos cacheados.
+### 3. Módulos de aplicación
+* **Pedidos:** listado, creación y edición de borradores, envío, aprobación, rechazo y cancelación, según los permisos.
+* **Empresas y presupuesto:** administración de empresas y evaluación del consumo mensual.
+* **Productos y stock:** catálogo, ajustes individuales, actualización masiva por CSV (SKU, precio y/o stock) y exportación CSV de productos activos.
+* **Usuarios:** administración desde el dashboard y API, con roles y desactivación/reactivación.
+* **Autorizaciones extra:** solicitudes de supervisores y aprobación/rechazo por administradores.
+* **Remitos:** listado en el dashboard y generación de PDF para pedidos aprobados; el PDF admite incluir o excluir valores.
 
-### 4. Lógica de Negocio Centralizada
-Toda la validación compleja (como el límite de un pedido por mes) reside en la carpeta `services/`. Los componentes de la UI y los API Routes consumen estos servicios para mantener la consistencia.
+### 4. Límites de negocio y persistencia
+La UI consume Route Handlers en `app/api/`, mientras `services/` concentra las reglas reutilizadas por las rutas. El límite mensual y las autorizaciones se comprueban en el servicio de pedidos, no mediante una restricción única de PostgreSQL. Los snapshots en `order_items` protegen el historial frente a cambios posteriores del catálogo; el registro `remitos` entrega numeración interna al aprobar.
+
+### 5. Despliegue
+`netlify.toml` ejecuta `npm run build`, publica `.next` y define headers para auth, login, dashboard y página inicial. Mantener el comportamiento de cacheado y las rutas configuradas al cambiar middleware o despliegue.
