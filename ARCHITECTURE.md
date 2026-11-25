@@ -41,3 +41,5 @@ La UI consume Route Handlers en `app/api/`, mientras `services/` concentra las r
 
 ### 5. Despliegue
 `netlify.toml` ejecuta `npm run build`, publica `.next` y define headers para auth, login, dashboard y página inicial. Mantener el comportamiento de cacheado y las rutas configuradas al cambiar middleware o despliegue.
+
+La conexión PostgreSQL de la aplicación usa un pool `postgres-js` acotado a una conexión por instancia, con cierre de conexiones inactivas. Esto limita el consumo en entornos serverless donde varias instancias pueden abrir sus propios pools. Si la carga aumenta, revisar el límite del proveedor y usar su endpoint/pooler recomendado antes de aumentar `max`.
