@@ -19,6 +19,7 @@ import { ArrowLeft, Plus, Minus, Trash2, Loader2, Search, AlertTriangle, Package
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import Link from "next/link";
+import { resolveProductImage } from "@/lib/images";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -108,7 +109,7 @@ export default function EditOrderContent({
         <p className="text-muted-foreground">
           Solo se pueden editar pedidos en estado Borrador
         </p>
-        <Link href="/dashboard/orders">
+        <Link href="/dashboard/orders" prefetch={false}>
           <Button>Volver a Pedidos</Button>
         </Link>
       </div>
@@ -239,7 +240,7 @@ export default function EditOrderContent({
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/orders">
+        <Link href="/dashboard/orders" prefetch={false}>
           <Button variant="ghost" size="icon" className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -431,14 +432,11 @@ export default function EditOrderContent({
                               <div className="flex items-center gap-3">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border">
                                     {product.imageUrl ? (
-                                      <img 
-                                        src={
-                                          product.imageUrl.startsWith('public/') 
-                                            ? product.imageUrl.replace(/^public\//, '/') 
-                                            : (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`)
-                                        } 
+                                      <img
+                                        src={resolveProductImage(product.imageUrl)}
                                         alt={product.name} 
                                         className="h-full w-full object-cover" 
+                                        loading="lazy"
                                       />
                                     ) : (
                                     <Package className="h-6 w-6 text-muted-foreground" />

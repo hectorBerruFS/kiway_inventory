@@ -19,6 +19,7 @@ import { ArrowLeft, Plus, Minus, Trash2, Loader2, Search, AlertTriangle, CheckCi
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import Link from "next/link";
+import { resolveProductImage } from "@/lib/images";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -251,7 +252,7 @@ export default function NewOrderContent() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/orders">
+        <Link href="/dashboard/orders" prefetch={false}>
           <Button variant="ghost" size="icon" className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -508,14 +509,11 @@ export default function NewOrderContent() {
                                 <div className="flex items-center gap-3">
                                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background border md:h-16 md:w-16">
                                     {product.imageUrl ? (
-                                      <img 
-                                        src={
-                                          product.imageUrl.startsWith('public/') 
-                                            ? product.imageUrl.replace(/^public\//, '/') 
-                                            : (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`)
-                                        } 
+                                      <img
+                                        src={resolveProductImage(product.imageUrl)}
                                         alt={product.name} 
                                         className="h-full w-full object-cover" 
+                                        loading="lazy"
                                       />
                                     ) : (
                                       <Package className="h-6 w-6 text-muted-foreground" />

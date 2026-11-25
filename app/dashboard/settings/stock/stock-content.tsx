@@ -124,7 +124,7 @@ export default function StockSettingsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild className="h-10 w-10">
-            <Link href="/dashboard/settings" aria-label="Volver a ajustes">
+            <Link href="/dashboard/settings" prefetch={false} aria-label="Volver a ajustes">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

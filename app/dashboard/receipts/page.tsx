@@ -119,7 +119,7 @@ export default function ReceiptsPage() {
             </div>
 
             {orders.map((order: any) => (
-              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`} prefetch={false}>
                 <Card className="hover:bg-accent/30 transition-colors overflow-hidden border-l-4 border-l-primary/20">
                   <CardContent className="p-0">
                     {/* Desktop Layout (oculto en móvil) */}

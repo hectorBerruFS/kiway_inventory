@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { companies, users, orders } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lt, isNull, or, sql, inArray } from "drizzle-orm";
 import { getMonthlyConsumedBudget, getAvailableBudget } from "./budget.service";
 
 /**
@@ -224,38 +224,65 @@ export async function getCompaniesWithBudgets(
   }
 
   const companiesList = await query;
+  if (companiesList.length === 0) return [];
 
-  return Promise.all(
-    companiesList.map(async (company) => {
-      const consumed = await getMonthlyConsumedBudget(company.id);
-      const available = await getAvailableBudget(
-        company.monthlyBudget,
-        company.id
-      );
-
-      const now = new Date();
-      const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-
-      const [lastOrder] = await db
-        .select({ status: orders.status })
-        .from(orders)
-        .where(
-          and(
-            eq(orders.companyId, company.id),
-            eq(orders.intendedMonth, currentYM)
-          )
-        )
-        .orderBy(desc(orders.createdAt))
-        .limit(1);
-
-      return {
-        ...company,
-        consumedBudget: consumed,
-        availableBudget: available,
-        currentOrderStatus: lastOrder?.status || null,
-      };
-    })
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const companyIds = companiesList.map((company) => company.id);
+  const currentMonthOrders = or(
+    eq(orders.intendedMonth, currentYM),
+    and(
+      isNull(orders.intendedMonth),
+      gte(orders.createdAt, start),
+      lt(orders.createdAt, end)
+    )
   );
+
+  const [consumptionRows, latestOrderRows] = await Promise.all([
+    db
+      .select({
+        companyId: orders.companyId,
+        consumed: sql<string>`COALESCE(SUM(${orders.total}), 0)`,
+      })
+      .from(orders)
+      .where(
+        and(
+          inArray(orders.companyId, companyIds),
+          eq(orders.status, "approved"),
+          currentMonthOrders
+        )
+      )
+      .groupBy(orders.companyId),
+    db
+      .selectDistinctOn([orders.companyId], {
+        companyId: orders.companyId,
+        status: orders.status,
+      })
+      .from(orders)
+      .where(and(inArray(orders.companyId, companyIds), currentMonthOrders))
+      .orderBy(orders.companyId, desc(orders.createdAt)),
+  ]);
+
+  const consumedByCompany = new Map(
+    consumptionRows.map((row) => [row.companyId, row.consumed])
+  );
+  const latestStatusByCompany = new Map(
+    latestOrderRows.map((row) => [row.companyId, row.status])
+  );
+
+  return companiesList.map((company) => {
+    const consumed = consumedByCompany.get(company.id) ?? "0";
+    return {
+      ...company,
+      consumedBudget: consumed,
+      availableBudget: String(
+        Math.max(0, Number(company.monthlyBudget) - Number(consumed))
+      ),
+      currentOrderStatus: latestStatusByCompany.get(company.id) ?? null,
+    };
+  });
 }
 
 export async function verifyCompanyAccess(

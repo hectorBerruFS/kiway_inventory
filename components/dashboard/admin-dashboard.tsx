@@ -78,7 +78,7 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-3 gap-3 md:gap-5 lg:gap-6">
   {/* Pendientes */}
-  <Link href={{ pathname: "/dashboard/orders", query: { status: "sent" } }}>
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "sent" } }} prefetch={false}>
     <Card className="cursor-pointer hover:shadow-md transition">
       <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
         <Clock className="h-5 w-5 text-chart-3 mb-1 md:h-7 md:w-7" />
@@ -89,7 +89,7 @@ export function AdminDashboard() {
   </Link>
 
   {/* Aprobados */}
-  <Link href={{ pathname: "/dashboard/orders", query: { status: "approved", month: currentMonth } }}>
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "approved", month: currentMonth } }} prefetch={false}>
     <Card className="cursor-pointer hover:shadow-md transition">
       <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
         <CheckCircle2 className="h-5 w-5 text-green-500 mb-1 md:h-7 md:w-7" />
@@ -100,7 +100,7 @@ export function AdminDashboard() {
   </Link>
 
   {/* Rechazados */}
-  <Link href={{ pathname: "/dashboard/orders", query: { status: "rejected", month: currentMonth } }}>
+  <Link href={{ pathname: "/dashboard/orders", query: { status: "rejected", month: currentMonth } }} prefetch={false}>
     <Card className="cursor-pointer hover:shadow-md transition">
       <CardContent className="flex flex-col items-center p-3 md:p-5 lg:p-6">
         <XCircle className="h-5 w-5 text-destructive mb-1 md:h-7 md:w-7" />
@@ -113,7 +113,7 @@ export function AdminDashboard() {
 
 
       <div className="grid grid-cols-3 gap-3 md:gap-5 lg:gap-6">
-        <Link href="/dashboard/orders">
+        <Link href="/dashboard/orders" prefetch={false}>
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
               <ShoppingCart className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
@@ -121,7 +121,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link href="/dashboard/receipts">
+        <Link href="/dashboard/receipts" prefetch={false}>
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
               <FileText className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
@@ -129,7 +129,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link href="/dashboard/settings">
+        <Link href="/dashboard/settings" prefetch={false}>
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="flex flex-col items-center p-4 md:p-6 lg:p-7">
               <Settings2 className="h-6 w-6 text-primary mb-1 md:h-8 md:w-8" />
@@ -159,7 +159,7 @@ export function AdminDashboard() {
         ) : (
           <div className="flex flex-col gap-2">
             {pendingOrders.map((order) => (
-              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`} prefetch={false}>
                 <Card className="hover:bg-accent/50 transition-colors">
                   <CardContent className="p-3 md:p-4 lg:p-5">
                     <div className="flex items-center justify-between mb-1">

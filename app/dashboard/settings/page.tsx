@@ -32,7 +32,7 @@ export default async function SettingsPage() {
       <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Ajustes</h1>
       <div className="grid gap-3 md:grid-cols-3 md:gap-5">
         {settings.map(({ title, description, href, icon: Icon }) => (
-          <Link key={title} href={href} className="min-h-24">
+          <Link key={title} href={href} prefetch={false} className="min-h-24">
             <Card className="h-full transition-colors hover:bg-accent/50">
               <CardContent className="flex h-full items-center gap-4 p-5 md:flex-col md:items-start md:justify-between md:p-6">
                 <Icon className="h-7 w-7 shrink-0 text-primary" />

@@ -110,7 +110,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="flex flex-col gap-4 p-4 print:hidden">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/orders">
+          <Link href="/dashboard/orders" prefetch={false}>
             <Button variant="ghost" size="icon" className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -193,7 +193,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         <div className="flex flex-col gap-2">
           {order.status === "draft" && isOwner && (
             <div className="flex gap-2">
-              <Link href={`/dashboard/orders/${id}/edit`} className="flex-1">
+              <Link href={`/dashboard/orders/${id}/edit`} prefetch={false} className="flex-1">
                 <Button className="w-full h-12 gap-2">
                   <Edit className="h-5 w-5" />
                   Retomar Pedido

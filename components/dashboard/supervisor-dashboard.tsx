@@ -43,7 +43,7 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
     <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">Mis Empresas</h1>
-        <Link href="/dashboard/orders/new">
+        <Link href="/dashboard/orders/new" prefetch={false}>
           <Button size="sm" className="gap-1 md:h-10 md:px-4 md:text-sm">
             <Plus className="h-4 w-4" />
             Nuevo Pedido
@@ -80,7 +80,7 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
                         </p>
                       </div>
                     </div>
-                    <Link href={`/dashboard/orders/new?companyId=${company.id}`}>
+                    <Link href={`/dashboard/orders/new?companyId=${company.id}`} prefetch={false}>
                       <Button variant="outline" size="sm" className="gap-1 text-xs h-8 md:h-9 md:px-3 md:text-sm">
                         <Plus className="h-3 w-3" />
                         Pedir
@@ -132,7 +132,7 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
       <div className="mt-2">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-foreground md:text-xl lg:text-2xl">Pedidos Recientes</h2>
-          <Link href="/dashboard/orders">
+          <Link href="/dashboard/orders" prefetch={false}>
             <Button variant="ghost" size="sm" className="text-xs md:text-sm">
               Ver todos
             </Button>
@@ -155,7 +155,7 @@ export function SupervisorDashboard({ userId }: { userId: string }) {
         ) : (
           <div className="flex flex-col gap-2">
             {recentOrders.map((order) => (
-              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`} prefetch={false}>
                 <Card className="hover:bg-accent/50 transition-colors">
                   <CardContent className="p-3 md:p-5">
                     <div className="flex items-center justify-between mb-2">

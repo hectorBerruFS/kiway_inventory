@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import useSWR, { mutate } from "swr";
 import Image from "next/image";
-import { normalizeProductImageUrl } from "@/lib/images";
+import { resolveProductImage } from "@/lib/images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,10 +189,11 @@ export default function ProductsPage() {
                             <div className="flex items-center justify-center h-12 w-12 shrink-0 bg-background rounded-md overflow-hidden border md:h-16 md:w-16">
                               {product.imageUrl ? (
                                 <Image 
-                                  src={normalizeProductImageUrl(product.imageUrl)} 
+                                  src={resolveProductImage(product.imageUrl)}
                                   alt={product.name} 
                                   width={48}
                                   height={48}
+                                  loading="lazy"
                                   className="h-full w-full object-cover" 
                                 />
                               ) : (
@@ -291,7 +292,7 @@ function ProductDialog({
       setPrice(product.price || "");
       setImageUrl(product.imageUrl || "");
       setImageFile(null);
-      setImagePreview(product.imageUrl ? normalizeProductImageUrl(product.imageUrl) : null);
+      setImagePreview(product.imageUrl ? resolveProductImage(product.imageUrl) : null);
     }
   }, [open, product]);
 
@@ -410,7 +411,7 @@ function ProductDialog({
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-center h-32 w-full bg-muted rounded-md overflow-hidden border">
                 {imagePreview ? (
-                  <Image src={imagePreview} alt="Preview" width={128} height={128} className="h-full w-full object-contain" />
+                  <Image src={resolveProductImage(imagePreview)} alt="Preview" width={128} height={128} className="h-full w-full object-contain" />
                 ) : (
                   <Package className="h-12 w-12 text-muted-foreground" />
                 )}

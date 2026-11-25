@@ -103,7 +103,7 @@ export default function UsersContent({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild className="h-10 w-10">
-            <Link href="/dashboard/settings" aria-label="Volver a Ajustes">
+            <Link href="/dashboard/settings" prefetch={false} aria-label="Volver a Ajustes">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

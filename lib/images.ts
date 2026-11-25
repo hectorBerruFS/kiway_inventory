@@ -2,15 +2,23 @@
  * Utilidades para el manejo de imágenes de productos
  */
 
-export function normalizeProductImageUrl(url: string | null | undefined): string {
+export function resolveProductImage(url?: string | null): string {
   if (!url) return "/img/products/default.jpg";
   
-  // Limpiar espacios o caracteres de control (como saltos de línea) que rompen el componente Image
   const cleanUrl = url.trim();
   if (!cleanUrl) return "/img/products/default.jpg";
   
-  // Si ya es una URL completa (http, https, data), retornarla tal cual
-  if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://") || cleanUrl.startsWith("data:")) {
+  // Preserve remote and embedded image URLs without treating them as local paths.
+  const remoteUrlMatch = cleanUrl.match(/^\/?(https?):(.*)$/i);
+  if (remoteUrlMatch) {
+    const protocol = remoteUrlMatch[1];
+    const remainder = remoteUrlMatch[2];
+    if (remainder.startsWith("//")) {
+      return cleanUrl.startsWith("/") ? cleanUrl.slice(1) : cleanUrl;
+    }
+    return `${protocol}://${remainder.replace(/^[/:]+/, "")}`;
+  }
+  if (cleanUrl.startsWith("data:")) {
     return cleanUrl;
   }
 
