@@ -719,7 +719,27 @@ export async function listOrders(
 
   // Apply month filter if provided
   if (filters?.month) {
-    conditions.push(eq(orders.intendedMonth, filters.month));
+    const match = /^(\d{4})-(\d{2})$/.exec(filters.month);
+    const year = match ? Number(match[1]) : 0;
+    const month = match ? Number(match[2]) : 0;
+
+    if (!match || year < 1000 || month < 1 || month > 12) {
+      throw new Error("Mes inválido");
+    }
+
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(Date.UTC(year, month, 1));
+
+    conditions.push(
+      or(
+        eq(orders.intendedMonth, filters.month),
+        and(
+          isNull(orders.intendedMonth),
+          sql`${orders.createdAt} >= (${start.toISOString()}::timestamptz AT TIME ZONE 'UTC')`,
+          sql`${orders.createdAt} < (${end.toISOString()}::timestamptz AT TIME ZONE 'UTC')`
+        )
+      )
+    );
   }
 
   const result = await db

@@ -1,7 +1,19 @@
 import { db } from "@/lib/db";
 import { companies, users, orders } from "@/lib/db/schema";
-import { eq, and, desc, gte, lt, isNull, or, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { getMonthlyConsumedBudget, getAvailableBudget } from "./budget.service";
+
+function getCurrentUtcMonth() {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const monthIndex = now.getUTCMonth();
+
+  return {
+    yearMonth: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
+    start: new Date(Date.UTC(year, monthIndex, 1)),
+    end: new Date(Date.UTC(year, monthIndex + 1, 1)),
+  };
+}
 
 /**
  * Service para gestión de empresas
@@ -206,81 +218,94 @@ export async function getCompanyWithBudgetUsage(
 export async function getCompaniesWithBudgets(
   filterBySupervisorId?: string
 ): Promise<CompanyWithBudget[]> {
-  let query = db
-    .select({
-      id: companies.id,
-      name: companies.name,
-      monthlyBudget: companies.monthlyBudget,
-      supervisorId: companies.supervisorId,
-      supervisorName: users.name,
-      createdAt: companies.createdAt,
-    })
-    .from(companies)
-    .leftJoin(users, eq(companies.supervisorId, users.id))
-    .$dynamic();
+  const { yearMonth, start, end } = getCurrentUtcMonth();
+  const supervisorFilter = filterBySupervisorId
+    ? sql`WHERE c.supervisor_id = ${filterBySupervisorId}`
+    : sql``;
 
-  if (filterBySupervisorId) {
-    query = query.where(eq(companies.supervisorId, filterBySupervisorId));
-  }
-
-  const companiesList = await query;
-  if (companiesList.length === 0) return [];
-
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const companyIds = companiesList.map((company) => company.id);
-  const currentMonthOrders = or(
-    eq(orders.intendedMonth, currentYM),
-    and(
-      isNull(orders.intendedMonth),
-      gte(orders.createdAt, start),
-      lt(orders.createdAt, end)
-    )
-  );
-
-  const [consumptionRows, latestOrderRows] = await Promise.all([
-    db
-      .select({
-        companyId: orders.companyId,
-        consumed: sql<string>`COALESCE(SUM(${orders.total}), 0)`,
-      })
-      .from(orders)
-      .where(
-        and(
-          inArray(orders.companyId, companyIds),
-          eq(orders.status, "approved"),
-          currentMonthOrders
+  const rows = await db.execute<{
+    id: string;
+    name: string;
+    monthly_budget: string;
+    supervisor_id: string;
+    supervisor_name: string | null;
+    created_at: Date;
+    consumed_budget: string;
+    current_order_status: string | null;
+  }>(sql`
+    WITH target_companies AS (
+      SELECT
+        c.id,
+        c.name,
+        c.monthly_budget,
+        c.supervisor_id,
+        u.name AS supervisor_name,
+        c.created_at
+      FROM companies c
+      LEFT JOIN users u ON c.supervisor_id = u.id
+      ${supervisorFilter}
+    ),
+    monthly_consumption AS (
+      SELECT
+        o.company_id,
+        COALESCE(SUM(o.total), 0)::text AS consumed
+      FROM orders o
+      INNER JOIN target_companies tc ON o.company_id = tc.id
+      WHERE o.status = 'approved'
+        AND (
+          o.intended_month = ${yearMonth}
+          OR (
+            o.intended_month IS NULL
+            AND o.created_at >= (${start.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+            AND o.created_at < (${end.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+          )
+        )
+      GROUP BY o.company_id
+    ),
+    latest_orders AS (
+      SELECT DISTINCT ON (o.company_id)
+        o.company_id,
+        o.status
+      FROM orders o
+      INNER JOIN target_companies tc ON o.company_id = tc.id
+      WHERE (
+        o.intended_month = ${yearMonth}
+        OR (
+          o.intended_month IS NULL
+          AND o.created_at >= (${start.toISOString()}::timestamptz AT TIME ZONE 'UTC')
+          AND o.created_at < (${end.toISOString()}::timestamptz AT TIME ZONE 'UTC')
         )
       )
-      .groupBy(orders.companyId),
-    db
-      .selectDistinctOn([orders.companyId], {
-        companyId: orders.companyId,
-        status: orders.status,
-      })
-      .from(orders)
-      .where(and(inArray(orders.companyId, companyIds), currentMonthOrders))
-      .orderBy(orders.companyId, desc(orders.createdAt)),
-  ]);
+      ORDER BY o.company_id, o.created_at DESC
+    )
+    SELECT
+      tc.id,
+      tc.name,
+      tc.monthly_budget,
+      tc.supervisor_id,
+      tc.supervisor_name,
+      tc.created_at,
+      COALESCE(mc.consumed, '0') AS consumed_budget,
+      lo.status AS current_order_status
+    FROM target_companies tc
+    LEFT JOIN monthly_consumption mc ON tc.id = mc.company_id
+    LEFT JOIN latest_orders lo ON tc.id = lo.company_id
+  `);
 
-  const consumedByCompany = new Map(
-    consumptionRows.map((row) => [row.companyId, row.consumed])
-  );
-  const latestStatusByCompany = new Map(
-    latestOrderRows.map((row) => [row.companyId, row.status])
-  );
-
-  return companiesList.map((company) => {
-    const consumed = consumedByCompany.get(company.id) ?? "0";
+  return rows.map((row) => {
+    const consumed = row.consumed_budget ?? "0";
     return {
-      ...company,
+      id: row.id,
+      name: row.name,
+      monthlyBudget: row.monthly_budget,
+      supervisorId: row.supervisor_id,
+      supervisorName: row.supervisor_name,
+      createdAt: new Date(row.created_at),
       consumedBudget: consumed,
       availableBudget: String(
-        Math.max(0, Number(company.monthlyBudget) - Number(consumed))
+        Math.max(0, Number(row.monthly_budget) - Number(consumed))
       ),
-      currentOrderStatus: latestStatusByCompany.get(company.id) ?? null,
+      currentOrderStatus: row.current_order_status ?? null,
     };
   });
 }

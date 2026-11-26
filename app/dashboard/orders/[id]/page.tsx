@@ -80,7 +80,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       mutate(`/api/orders/${id}`);
       mutate("/api/orders");
-      mutate("/api/orders?status=sent");
+      mutate("/api/orders?status=sent&month=all");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al actualizar");
     } finally {

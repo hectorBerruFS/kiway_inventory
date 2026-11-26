@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { listOrders, createOrder } from "@/services/order.service";
 
+function getCurrentUtcMonth(): string {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -9,7 +14,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") as "draft" | "sent" | "approved" | "rejected" | "cancelled" | null;
   const companyId = searchParams.get("companyId");
-  const month = searchParams.get("month");
+  const monthParam = searchParams.get("month");
+  const month = monthParam === "all" ? undefined : monthParam || getCurrentUtcMonth();
 
   try {
     const result = await listOrders(session.user.id, session.user.role, {

@@ -22,10 +22,16 @@ const STATUS_FILTERS = [
   { value: "rejected", label: "Rechazado" },
 ];
 
+function getCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export default function ReceiptsPage() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "";
-  const initialMonth = searchParams.get("month") || "";
+  const monthParam = searchParams.get("month");
+  const initialMonth = monthParam === "all" ? "" : monthParam || getCurrentMonth();
 
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [monthFilter, setMonthFilter] = useState(initialMonth);
@@ -37,9 +43,9 @@ export default function ReceiptsPage() {
 
   const queryParams = new URLSearchParams();
   if (statusFilter) queryParams.set("status", statusFilter);
-  if (monthFilter) queryParams.set("month", monthFilter);
+  queryParams.set("month", monthFilter || "all");
 
-  const url = queryParams.toString() ? `/api/orders?${queryParams.toString()}` : "/api/orders";
+  const url = `/api/orders?${queryParams.toString()}`;
   const { data: orders, isLoading } = useSWR(url, fetcher);
 
   return (
@@ -76,16 +82,14 @@ export default function ReceiptsPage() {
               onChange={(e) => setMonthFilter(e.target.value)}
               className="h-9 text-xs w-[180px] md:h-11 md:text-sm md:w-[220px]"
             />
-            {monthFilter && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMonthFilter("")}
-                className="text-[10px] h-7 px-2"
-              >
-                Limpiar mes
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMonthFilter(monthFilter ? "" : getCurrentMonth())}
+              className="text-[10px] h-7 px-2"
+            >
+              {monthFilter ? "Ver todo el historial" : "Mes actual"}
+            </Button>
           </div>
         </div>
 

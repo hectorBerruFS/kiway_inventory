@@ -14,6 +14,15 @@ import { Input } from "@/components/ui/input";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+interface Order {
+  id: string;
+  companyName: string | null;
+  supervisorName: string | null;
+  status: string;
+  total: string;
+  createdAt: string;
+}
+
 const STATUS_FILTERS = [
   { value: "", label: "Todos" },
   { value: "draft", label: "Borrador" },
@@ -22,10 +31,16 @@ const STATUS_FILTERS = [
   { value: "rejected", label: "Rechazado" },
 ];
 
+function getCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export default function OrdersPage() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "";
-  const initialMonth = searchParams.get("month") || "";
+  const monthParam = searchParams.get("month");
+  const initialMonth = monthParam === "all" ? "" : monthParam || getCurrentMonth();
 
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [monthFilter, setMonthFilter] = useState(initialMonth);
@@ -38,10 +53,10 @@ export default function OrdersPage() {
 
   const queryParams = new URLSearchParams();
   if (statusFilter) queryParams.set("status", statusFilter);
-  if (monthFilter) queryParams.set("month", monthFilter);
+  queryParams.set("month", monthFilter || "all");
 
-  const url = queryParams.toString() ? `/api/orders?${queryParams.toString()}` : "/api/orders";
-  const { data: orders, isLoading } = useSWR(url, fetcher);
+  const url = `/api/orders?${queryParams.toString()}`;
+  const { data: orders, isLoading } = useSWR<Order[]>(url, fetcher);
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-8 md:gap-8 lg:max-w-5xl lg:mx-auto lg:p-10">
@@ -78,16 +93,14 @@ export default function OrdersPage() {
             onChange={(e) => setMonthFilter(e.target.value)}
             className="h-9 text-xs w-[180px] md:h-10 md:text-sm md:w-[220px]"
           />
-          {monthFilter && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMonthFilter("")}
-              className="text-[10px] h-7 px-2 md:text-xs md:h-8"
-            >
-              Limpiar mes
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMonthFilter(monthFilter ? "" : getCurrentMonth())}
+            className="text-[10px] h-7 px-2 md:text-xs md:h-8"
+          >
+            {monthFilter ? "Ver todo el historial" : "Mes actual"}
+          </Button>
         </div>
       </div>
 
